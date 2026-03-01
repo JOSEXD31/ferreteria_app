@@ -82,7 +82,7 @@ export default function CajaPage() {
                         <div className="flex items-center gap-4">
                             <SidebarTrigger />
                             <h1 className="text-xl font-bold flex items-center gap-2">
-                                <Wallet className="text-emerald-400" /> Control de Caja y Finanzas
+                                <Wallet className="text-emerald-400" /> Control de Caja y Finanzas.
                             </h1>
                         </div>
                         <div className="text-sm text-slate-400 font-medium">
