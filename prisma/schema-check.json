@@ -1,0 +1,53 @@
+--- Columns for table: cliente ---
+Table cliente not found or error.
+--- Columns for table: clientes ---
+[
+  {
+    "Field": "id_cliente",
+    "Type": "int",
+    "Null": "NO",
+    "Key": "PRI",
+    "Default": null,
+    "Extra": "auto_increment"
+  },
+  {
+    "Field": "nombre",
+    "Type": "varchar(150)",
+    "Null": "NO",
+    "Key": "",
+    "Default": null,
+    "Extra": ""
+  },
+  {
+    "Field": "dni_ruc",
+    "Type": "varchar(20)",
+    "Null": "YES",
+    "Key": "",
+    "Default": null,
+    "Extra": ""
+  },
+  {
+    "Field": "telefono",
+    "Type": "varchar(20)",
+    "Null": "YES",
+    "Key": "",
+    "Default": null,
+    "Extra": ""
+  },
+  {
+    "Field": "direccion",
+    "Type": "varchar(200)",
+    "Null": "YES",
+    "Key": "",
+    "Default": null,
+    "Extra": ""
+  },
+  {
+    "Field": "estado",
+    "Type": "tinyint",
+    "Null": "YES",
+    "Key": "",
+    "Default": "1",
+    "Extra": ""
+  }
+]

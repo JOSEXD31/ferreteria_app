@@ -1,0 +1,291 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model usuario {
+  id_usuario     Int      @id @default(autoincrement())
+  nombre         String   @db.VarChar(100)
+  usuario        String   @unique @db.VarChar(50)
+  password       String   @db.VarChar(255)
+  rol            Rol      @default(vendedor)
+  estado         Int      @default(1) @db.TinyInt
+  fecha_creacion DateTime @default(now()) @db.Timestamp(0)
+  
+  compras        compra[]
+  ventas         venta[]
+  cajas          caja[]
+
+  @@map("usuarios")
+}
+
+enum Rol {
+  admin
+  vendedor
+  almacen
+  tecnico
+}
+
+model categoria {
+  id_categoria Int      @id @default(autoincrement())
+  nombre       String   @db.VarChar(100)
+  descripcion  String?  @db.Text
+  estado       Int      @default(1) @db.TinyInt
+  
+  productos    producto[]
+
+  @@map("categorias")
+}
+
+model unidad_medida {
+  id_unidad   Int      @id @default(autoincrement())
+  nombre       String   @db.VarChar(50)
+  abreviatura  String   @db.VarChar(10)
+  
+  productos    producto[]
+
+  @@map("unidades_medida")
+}
+
+model producto {
+  id_producto    Int      @id @default(autoincrement())
+  codigo         String?  @unique @db.VarChar(50)
+  nombre         String   @db.VarChar(150)
+  descripcion    String?  @db.Text
+  id_categoria   Int?
+  id_unidad      Int?
+  precio_compra  Decimal  @default(0) @db.Decimal(10, 2)
+  precio_venta   Decimal  @db.Decimal(10, 2)
+  stock_actual   Decimal  @default(0) @db.Decimal(12, 2)
+  stock_minimo   Decimal  @default(0) @db.Decimal(12, 2)
+  estado         Int      @default(1) @db.TinyInt
+  fecha_registro DateTime @default(now()) @db.Timestamp(0)
+  
+  categoria      categoria?      @relation(fields: [id_categoria], references: [id_categoria], onDelete: NoAction, onUpdate: NoAction)
+  unidad_medida  unidad_medida?  @relation(fields: [id_unidad], references: [id_unidad], onDelete: NoAction, onUpdate: NoAction)
+  
+  movimientos    movimiento_inventario[]
+  detalle_compras detalle_compra[]
+  detalle_ventas  detalle_venta[]
+  trabajo_materiales trabajo_material[]
+
+  @@index([id_categoria])
+  @@index([id_unidad])
+  @@map("productos")
+}
+
+model movimiento_inventario {
+  id_movimiento   Int      @id @default(autoincrement())
+  id_producto     Int
+  tipo             TipoMovimiento
+  cantidad         Decimal  @db.Decimal(12, 2)
+  precio_unitario  Decimal? @db.Decimal(10, 2)
+  referencia       String?  @db.VarChar(100)
+  fecha            DateTime @default(now()) @db.Timestamp(0)
+  
+  producto         producto @relation(fields: [id_producto], references: [id_producto])
+
+  @@index([id_producto])
+  @@map("movimientos_inventario")
+}
+
+enum TipoMovimiento {
+  compra
+  venta
+  ajuste
+  uso_trabajo
+}
+
+model proveedor {
+  id_proveedor Int      @id @default(autoincrement())
+  ruc          String?  @db.VarChar(20)
+  nombre       String   @db.VarChar(150)
+  telefono     String?  @db.VarChar(20)
+  direccion    String?  @db.VarChar(200)
+  email        String?  @db.VarChar(100)
+  estado       Int      @default(1) @db.TinyInt
+  
+  compras      compra[]
+
+  @@map("proveedores")
+}
+
+model compra {
+  id_compra    Int      @id @default(autoincrement())
+  id_proveedor Int
+  id_usuario   Int?
+  fecha        DateTime @default(now()) @db.DateTime(0)
+  subtotal     Decimal? @db.Decimal(12, 2)
+  igv          Decimal? @db.Decimal(12, 2)
+  total        Decimal? @db.Decimal(12, 2)
+  
+  proveedor    proveedor @relation(fields: [id_proveedor], references: [id_proveedor])
+  usuario      usuario?  @relation(fields: [id_usuario], references: [id_usuario])
+  detalles     detalle_compra[]
+
+  @@index([id_proveedor])
+  @@index([id_usuario])
+  @@map("compras")
+}
+
+model detalle_compra {
+  id_detalle    Int      @id @default(autoincrement())
+  id_compra     Int
+  id_producto   Int
+  cantidad      Decimal  @db.Decimal(12, 2)
+  precio_compra Decimal  @db.Decimal(10, 2)
+  subtotal      Decimal? @db.Decimal(12, 2)
+  
+  compra        compra   @relation(fields: [id_compra], references: [id_compra], onDelete: Cascade)
+  producto      producto @relation(fields: [id_producto], references: [id_producto])
+
+  @@index([id_compra])
+  @@index([id_producto])
+  @@map("detalle_compras")
+}
+
+model cliente {
+  id_cliente Int      @id @default(autoincrement())
+  nombre     String   @db.VarChar(150)
+  dni_ruc    String?  @db.VarChar(20)
+  telefono   String?  @db.VarChar(20)
+  direccion  String?  @db.VarChar(200)
+  estado     Int      @default(1) @db.TinyInt
+  
+  ventas     venta[]
+  trabajos   trabajo[]
+
+  @@map("clientes")
+}
+
+model venta {
+  id_venta     Int      @id @default(autoincrement())
+  id_cliente   Int?
+  id_usuario   Int?
+  tipo         TipoVenta @default(producto)
+  fecha        DateTime @default(now()) @db.DateTime(0)
+  subtotal     Decimal? @db.Decimal(12, 2)
+  igv          Decimal? @db.Decimal(12, 2)
+  total        Decimal? @db.Decimal(12, 2)
+  estado       EstadoVenta @default(pagado)
+  
+  cliente      cliente? @relation(fields: [id_cliente], references: [id_cliente])
+  usuario      usuario? @relation(fields: [id_usuario], references: [id_usuario])
+  detalles     detalle_venta[]
+
+  @@index([id_cliente])
+  @@index([id_usuario])
+  @@map("ventas")
+}
+
+enum TipoVenta {
+  producto
+  trabajo
+}
+
+enum EstadoVenta {
+  pagado
+  anulado
+}
+
+model detalle_venta {
+  id_detalle      Int      @id @default(autoincrement())
+  id_venta        Int
+  id_producto     Int?
+  descripcion     String?  @db.VarChar(200)
+  cantidad        Decimal? @db.Decimal(12, 2)
+  precio_unitario Decimal? @db.Decimal(10, 2)
+  subtotal        Decimal? @db.Decimal(12, 2)
+  
+  venta           venta    @relation(fields: [id_venta], references: [id_venta], onDelete: Cascade)
+  producto        producto? @relation(fields: [id_producto], references: [id_producto])
+
+  @@index([id_venta])
+  @@index([id_producto])
+  @@map("detalle_ventas")
+}
+
+model caja {
+  id_caja        Int      @id @default(autoincrement())
+  fecha          DateTime @db.Date
+  monto_inicial  Decimal? @db.Decimal(12, 2)
+  total_ingresos Decimal? @db.Decimal(12, 2)
+  total_egresos  Decimal? @db.Decimal(12, 2)
+  monto_final    Decimal? @db.Decimal(12, 2)
+  id_usuario     Int?
+  
+  usuario        usuario? @relation(fields: [id_usuario], references: [id_usuario])
+
+  @@index([id_usuario])
+  @@map("caja")
+}
+
+model trabajo {
+  id_trabajo      Int      @id @default(autoincrement())
+  id_cliente      Int?
+  descripcion     String?  @db.Text
+  fecha_inicio    DateTime? @db.Date
+  fecha_fin       DateTime? @db.Date
+  costo_materiales Decimal? @db.Decimal(12, 2)
+  costo_mano_obra Decimal? @db.Decimal(12, 2)
+  precio_total    Decimal? @db.Decimal(12, 2)
+  estado          EstadoTrabajo?
+  
+  cliente         cliente? @relation(fields: [id_cliente], references: [id_cliente])
+  materiales      trabajo_material[]
+  tecnicos        trabajo_tecnico[]
+
+  @@index([id_cliente])
+  @@map("trabajos")
+}
+
+enum EstadoTrabajo {
+  pendiente
+  proceso
+  terminado
+}
+
+model trabajo_material {
+  id           Int      @id @default(autoincrement())
+  id_trabajo   Int?
+  id_producto  Int?
+  cantidad     Decimal? @db.Decimal(12, 2)
+  
+  trabajo      trabajo? @relation(fields: [id_trabajo], references: [id_trabajo], onDelete: Cascade)
+  producto     producto? @relation(fields: [id_producto], references: [id_producto])
+
+  @@index([id_trabajo])
+  @@index([id_producto])
+  @@map("trabajo_materiales")
+}
+
+model tecnico {
+  id_tecnico   Int      @id @default(autoincrement())
+  nombre       String?  @db.VarChar(150)
+  telefono     String?  @db.VarChar(20)
+  especialidad String?  @db.VarChar(100)
+  estado       Int      @default(1) @db.TinyInt
+  
+  trabajos     trabajo_tecnico[]
+
+  @@map("tecnicos")
+}
+
+model trabajo_tecnico {
+  id          Int      @id @default(autoincrement())
+  id_trabajo  Int?
+  id_tecnico  Int?
+  pago        Decimal? @db.Decimal(12, 2)
+  
+  trabajo     trabajo? @relation(fields: [id_trabajo], references: [id_trabajo], onDelete: Cascade)
+  tecnico     tecnico? @relation(fields: [id_tecnico], references: [id_tecnico])
+
+  @@index([id_trabajo])
+  @@index([id_tecnico])
+  @@map("trabajo_tecnicos")
+}
