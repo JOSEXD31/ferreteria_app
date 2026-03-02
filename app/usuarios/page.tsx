@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Plus, Search, Shield, User, Mail, Lock, Settings, UserCheck } from "lucide-react"
+import { Plus, Search, Shield, User, Mail, Lock, Settings, UserCheck, Edit, Trash2 } from "lucide-react"
 import { toast } from 'react-toastify'
 
 interface Usuario {
@@ -28,6 +28,7 @@ export default function UsuariosPage() {
     const [loading, setLoading] = useState(true)
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
     const [searchTerm, setSearchTerm] = useState("")
+    const [editingUser, setEditingUser] = useState<Usuario | null>(null)
 
     const [formData, setFormData] = useState({
         nombre: "",
@@ -58,39 +59,82 @@ export default function UsuariosPage() {
     }
 
     const handleCreateUser = async () => {
-        if (!formData.nombre || !formData.usuario || !formData.password || !formData.rol) {
-            toast.warning("Por favor complete todos los campos")
+        if (!formData.nombre || !formData.usuario || !formData.rol) {
+            toast.warning("Por favor complete todos los campos obligatorios")
+            return
+        }
+
+        if (!editingUser && !formData.password) {
+            toast.warning("La contraseña es obligatoria para nuevos usuarios")
             return
         }
 
         try {
+            const method = editingUser ? "PUT" : "POST"
+            const body = editingUser ? { ...formData, id_usuario: editingUser.id_usuario } : formData
+
             const res = await fetch("/api/usuarios", {
-                method: "POST",
+                method,
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(formData)
+                body: JSON.stringify(body)
             })
             const data = await res.json()
 
             if (res.ok && data.success) {
-                toast.success("Usuario creado con éxito")
+                toast.success(editingUser ? "Usuario actualizado con éxito" : "Usuario creado con éxito")
                 setIsCreateModalOpen(false)
-                setFormData({
-                    nombre: "",
-                    usuario: "",
-                    password: "",
-                    rol: "vendedor"
-                })
+                resetForm()
                 fetchUsuarios()
             } else {
-                toast.error(data.message || "Error al crear usuario")
+                toast.error(data.message || "Error al procesar la solicitud")
             }
         } catch (error) {
-            console.error("Error creating user:", error)
-            toast.error("Error de conexión al crear usuario")
+            console.error("Error saving user:", error)
+            toast.error("Error de conexión al guardar usuario")
         }
     }
 
-    const filteredUsers = usuarios.filter(u => 
+    const resetForm = () => {
+        setEditingUser(null)
+        setFormData({
+            nombre: "",
+            usuario: "",
+            password: "",
+            rol: "vendedor"
+        })
+    }
+
+    const handleEdit = (u: Usuario) => {
+        setEditingUser(u)
+        setFormData({
+            nombre: u.nombre,
+            usuario: u.usuario,
+            password: "",
+            rol: u.rol
+        })
+        setIsCreateModalOpen(true)
+    }
+
+    const handleDelete = async (id: number) => {
+        if (!confirm("¿Está seguro de desactivar este usuario?")) return;
+        try {
+            const res = await fetch(`/api/usuarios?id=${id}`, {
+                method: "DELETE"
+            })
+            const data = await res.json()
+            if (res.ok && data.success) {
+                toast.success("Usuario desactivado correctamente")
+                fetchUsuarios()
+            } else {
+                toast.error(data.message || "Error al desactivar usuario")
+            }
+        } catch (error) {
+            console.error("Error deleting user:", error)
+            toast.error("Error de conexión")
+        }
+    }
+
+    const filteredUsers = usuarios.filter(u =>
         u.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
         u.usuario.toLowerCase().includes(searchTerm.toLowerCase())
     )
@@ -109,8 +153,8 @@ export default function UsuariosPage() {
         <SidebarProvider>
             <AppSidebar />
             <SidebarInset>
-                <div className="min-h-screen bg-slate-950 text-white">
-                    <header className="h-16 border-b border-slate-800 flex items-center px-6 justify-between bg-slate-900/50 backdrop-blur-xl">
+                <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white">
+                    <header className="h-16 border-b border-slate-200 dark:border-slate-800 flex items-center px-6 justify-between bg-slate-100/50 dark:bg-slate-900/50 backdrop-blur-xl">
                         <div className="flex items-center gap-4">
                             <SidebarTrigger />
                             <h1 className="text-xl font-bold flex items-center gap-2">
@@ -123,47 +167,50 @@ export default function UsuariosPage() {
                         <div className="max-w-5xl mx-auto">
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                                 <div className="relative w-full max-w-sm">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
-                                    <Input 
-                                        placeholder="Buscar usuario o nombre..." 
-                                        className="pl-10 bg-slate-900 border-slate-800 shadow-inner"
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 w-4 h-4" />
+                                    <Input
+                                        placeholder="Buscar usuario o nombre..."
+                                        className="pl-10 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-inner"
                                         value={searchTerm}
                                         onChange={e => setSearchTerm(e.target.value)}
                                     />
                                 </div>
-                                <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+                                <Dialog open={isCreateModalOpen} onOpenChange={(open) => {
+                                    if (!open) resetForm();
+                                    setIsCreateModalOpen(open);
+                                }}>
                                     <DialogTrigger asChild>
                                         <Button className="bg-purple-600 hover:bg-purple-700 shadow-lg shadow-purple-500/20">
                                             <Plus className="w-4 h-4 mr-2" /> Agregar Usuario
                                         </Button>
                                     </DialogTrigger>
-                                    <DialogContent className="bg-slate-900 border-slate-800 text-white">
+                                    <DialogContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
                                         <DialogHeader>
-                                            <DialogTitle>Crear Usuario de Sistema</DialogTitle>
-                                            <DialogDescription>Asigne un rol y credenciales para el nuevo personal</DialogDescription>
+                                            <DialogTitle>{editingUser ? "Editar Usuario" : "Crear Usuario de Sistema"}</DialogTitle>
+                                            <DialogDescription>{editingUser ? "Modifique los datos del usuario. Deje la contraseña en blanco para no cambiarla." : "Asigne un rol y credenciales para el nuevo personal"}</DialogDescription>
                                         </DialogHeader>
                                         <div className="grid gap-4 py-4">
                                             <div className="space-y-2">
                                                 <Label>Nombre Completo</Label>
-                                                <Input className="bg-slate-800 border-slate-700" placeholder="Ej: Maria Lopez" value={formData.nombre} onChange={e => setFormData({...formData, nombre: e.target.value})} />
+                                                <Input className="bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700" placeholder="Ej: Maria Lopez" value={formData.nombre} onChange={e => setFormData({ ...formData, nombre: e.target.value })} />
                                             </div>
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div className="space-y-2">
                                                     <Label>Nombre de Usuario</Label>
-                                                    <Input className="bg-slate-800 border-slate-700" placeholder="marial" value={formData.usuario} onChange={e => setFormData({...formData, usuario: e.target.value})} />
+                                                    <Input className="bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700" placeholder="marial" value={formData.usuario} onChange={e => setFormData({ ...formData, usuario: e.target.value })} />
                                                 </div>
                                                 <div className="space-y-2">
                                                     <Label>Contraseña</Label>
-                                                    <Input type="password" className="bg-slate-800 border-slate-700" placeholder="••••••••" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} />
+                                                    <Input type="password" className="bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700" placeholder="••••••••" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} />
                                                 </div>
                                             </div>
                                             <div className="space-y-2">
                                                 <Label>Rol en el Sistema</Label>
-                                                <Select value={formData.rol} onValueChange={v => setFormData({...formData, rol: v})}>
-                                                    <SelectTrigger className="bg-slate-800 border-slate-700">
+                                                <Select value={formData.rol} onValueChange={v => setFormData({ ...formData, rol: v })}>
+                                                    <SelectTrigger className="bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700">
                                                         <SelectValue />
                                                     </SelectTrigger>
-                                                    <SelectContent className="bg-slate-800 border-slate-700 text-white">
+                                                    <SelectContent className="bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white">
                                                         <SelectItem value="vendedor">Vendedor (Punto de Venta)</SelectItem>
                                                         <SelectItem value="almacen">Almacenero (Inventario)</SelectItem>
                                                         <SelectItem value="tecnico">Técnico (Servicios)</SelectItem>
@@ -173,17 +220,17 @@ export default function UsuariosPage() {
                                             </div>
                                         </div>
                                         <div className="flex justify-end gap-2">
-                                            <Button variant="ghost" onClick={() => setIsCreateModalOpen(false)}>Cancelar</Button>
-                                            <Button onClick={handleCreateUser} className="bg-purple-600 hover:bg-purple-700">Crear Acceso</Button>
+                                            <Button variant="ghost" onClick={() => { setIsCreateModalOpen(false); resetForm(); }}>Cancelar</Button>
+                                            <Button onClick={handleCreateUser} className="bg-purple-600 hover:bg-purple-700">{editingUser ? "Guardar Cambios" : "Crear Acceso"}</Button>
                                         </div>
                                     </DialogContent>
                                 </Dialog>
                             </div>
 
-                            <Card className="bg-slate-900 border-slate-800 overflow-hidden">
+                            <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 overflow-hidden">
                                 <Table>
-                                    <TableHeader className="bg-slate-800/50">
-                                        <TableRow className="border-slate-800">
+                                    <TableHeader className="bg-slate-200/50 dark:bg-slate-800/50">
+                                        <TableRow className="border-slate-200 dark:border-slate-800">
                                             <TableHead className="w-[300px]">Colaborador</TableHead>
                                             <TableHead>Id de Usuario</TableHead>
                                             <TableHead>Rol Asignado</TableHead>
@@ -193,20 +240,20 @@ export default function UsuariosPage() {
                                     </TableHeader>
                                     <TableBody>
                                         {loading ? (
-                                            <TableRow><TableCell colSpan={5} className="text-center py-10 text-slate-500">Buscando usuarios...</TableCell></TableRow>
+                                            <TableRow><TableCell colSpan={5} className="text-center py-10 text-slate-400 dark:text-slate-500">Buscando usuarios...</TableCell></TableRow>
                                         ) : filteredUsers.map(u => (
-                                            <TableRow key={u.id_usuario} className="border-slate-800 hover:bg-slate-800/20 group transition-colors">
+                                            <TableRow key={u.id_usuario} className="border-slate-200 dark:border-slate-800 hover:bg-slate-200/20 dark:bg-slate-800/20 group transition-colors">
                                                 <TableCell>
                                                     <div className="flex items-center gap-3">
-                                                        <Avatar className="h-9 w-9 border border-slate-700">
-                                                            <AvatarFallback className="bg-slate-800 text-purple-400 font-bold">
+                                                        <Avatar className="h-9 w-9 border border-slate-300 dark:border-slate-700">
+                                                            <AvatarFallback className="bg-slate-100 dark:bg-slate-800 text-purple-400 font-bold">
                                                                 {u.nombre.charAt(0)}
                                                             </AvatarFallback>
                                                         </Avatar>
-                                                        <span className="font-semibold text-slate-200">{u.nombre}</span>
+                                                        <span className="font-semibold text-slate-800 dark:text-slate-200">{u.nombre}</span>
                                                     </div>
                                                 </TableCell>
-                                                <TableCell className="font-mono text-xs text-slate-400">{u.usuario}</TableCell>
+                                                <TableCell className="font-mono text-xs text-slate-400 dark:text-slate-500 dark:text-slate-400">{u.usuario}</TableCell>
                                                 <TableCell>{getRoleBadge(u.rol)}</TableCell>
                                                 <TableCell>
                                                     <div className="flex items-center gap-2 text-xs text-emerald-400">
@@ -215,34 +262,39 @@ export default function UsuariosPage() {
                                                     </div>
                                                 </TableCell>
                                                 <TableCell className="text-right">
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-white">
-                                                        <Settings className="h-4 w-4" />
-                                                    </Button>
+                                                    <div className="flex justify-end gap-1">
+                                                        <Button variant="ghost" size="icon" onClick={() => handleEdit(u)} className="h-8 w-8 text-blue-400 hover:text-blue-300">
+                                                            <Edit className="h-4 w-4" />
+                                                        </Button>
+                                                        <Button variant="ghost" size="icon" onClick={() => handleDelete(u.id_usuario)} className="h-8 w-8 text-red-400 hover:text-red-300">
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </div>
                                                 </TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>
                                 </Table>
                             </Card>
-                            
+
                             <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <Card className="bg-slate-900/50 border-slate-800 border-dashed">
+                                <Card className="bg-slate-100/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 border-dashed">
                                     <CardHeader>
                                         <CardTitle className="text-sm flex items-center gap-2">
-                                            <Lock className="w-4 h-4 text-slate-500" /> Seguridad de Cuentas
+                                            <Lock className="w-4 h-4 text-slate-400 dark:text-slate-500" /> Seguridad de Cuentas
                                         </CardTitle>
                                     </CardHeader>
-                                    <CardContent className="text-xs text-slate-500 leading-relaxed">
+                                    <CardContent className="text-xs text-slate-400 dark:text-slate-500 leading-relaxed">
                                         Se recomienda cambiar las contraseñas cada 90 días. Los administradores pueden restablecer accesos bloqueados por intentos fallidos.
                                     </CardContent>
                                 </Card>
-                                <Card className="bg-slate-900/50 border-slate-800 border-dashed">
+                                <Card className="bg-slate-100/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 border-dashed">
                                     <CardHeader>
                                         <CardTitle className="text-sm flex items-center gap-2">
-                                            <UserCheck className="w-4 h-4 text-slate-500" /> Monitoreo de sesión
+                                            <UserCheck className="w-4 h-4 text-slate-400 dark:text-slate-500" /> Monitoreo de sesión
                                         </CardTitle>
                                     </CardHeader>
-                                    <CardContent className="text-xs text-slate-500 leading-relaxed">
+                                    <CardContent className="text-xs text-slate-400 dark:text-slate-500 leading-relaxed">
                                         Usted está viendo a los usuarios con permisos de escritorio. Solo los administradores pueden gestionar otros perfiles administrativos.
                                     </CardContent>
                                 </Card>

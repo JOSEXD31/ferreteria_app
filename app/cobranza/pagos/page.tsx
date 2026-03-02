@@ -838,7 +838,7 @@ export default function ClientsPage() {
     <div className="space-y-6">
       <Card className="rounded-md border border-gray-700 bg-gray-800/30">
         <CardHeader>
-          <CardTitle className="flex items-center text-white">
+          <CardTitle className="flex items-center text-slate-900 dark:text-white">
             Buscar Cliente
           </CardTitle>
         </CardHeader>
@@ -850,7 +850,7 @@ export default function ClientsPage() {
                 placeholder="Buscar por nombre, DNI, teléfono o email..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-gray-700/50 border-gray-600 text-white"
+                className="pl-10 bg-gray-700/50 border-gray-600 text-slate-900 dark:text-white"
               />
             </div>
 
@@ -962,7 +962,7 @@ export default function ClientsPage() {
             </div>
             <div className="flex flex-col items-end gap-2">
               <Button
-                className="bg-gray-200 text-gray-700 hover:bg-gray-500 hover:text-white"
+                className="bg-gray-200 text-gray-700 hover:bg-gray-500 hover:text-slate-900 dark:text-white"
                 onClick={() => setShowAddDeuda(true)}
               >
                 Agregar otras Deudas
@@ -971,7 +971,7 @@ export default function ClientsPage() {
               <div className="flex gap-2">
                 <Button
                   variant="outline"
-                  className="bg-gray-200 text-gray-700 hover:bg-gray-500 hover:text-white border-none"
+                  className="bg-gray-200 text-gray-700 hover:bg-gray-500 hover:text-slate-900 dark:text-white border-none"
                   onClick={() => setShowPagosModal(true)}
                 >
                   Ver todos los pagos
@@ -979,7 +979,7 @@ export default function ClientsPage() {
                 </Button>
                 <Button
                   variant="outline"
-                  className="bg-gray-200 text-gray-700 hover:bg-gray-500 hover:text-white border-none"
+                  className="bg-gray-200 text-gray-700 hover:bg-gray-500 hover:text-slate-900 dark:text-white border-none"
                   onClick={() => setShowTrabajosModal(true)}
                 >
                   Ver trabajos
@@ -1013,7 +1013,7 @@ export default function ClientsPage() {
                     <div className="flex-1">
                       <div className="flex items-start justify-between mb-2">
                         <div>
-                          <h4 className="font-medium text-white">{item.deu.descripcion}</h4>
+                          <h4 className="font-medium text-slate-900 dark:text-white">{item.deu.descripcion}</h4>
                         </div>
                         <Badge
                           variant={
@@ -1033,7 +1033,7 @@ export default function ClientsPage() {
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
                         <div>
                           <Label className="text-xs text-gray-200">Monto Total</Label>
-                          <p className="font-semibold text-white">S/ {Number(item.deu.monto).toFixed(2)}</p>
+                          <p className="font-semibold text-slate-900 dark:text-white">S/ {Number(item.deu.monto).toFixed(2)}</p>
                         </div>
                         <div>
                           <Label className="text-xs text-gray-200">Saldo Pendiente</Label>
@@ -1052,7 +1052,7 @@ export default function ClientsPage() {
                             value={item.selected ? item.amountToPay ?? "" : ""}
                             onChange={(e) => handleMontoChange(index, parseFloat(e.target.value) || 0)}
                             disabled={!item.selected}
-                            className="text-right bg-gray-700/50 border-gray-600 text-white"
+                            className="text-right bg-gray-700/50 border-gray-600 text-slate-900 dark:text-white"
                           />
                         </div>
                       </div>
@@ -1071,7 +1071,7 @@ export default function ClientsPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="text-xs h-7 border-gray-600 hover:text-white hover:bg-gray-700"
+                            className="text-xs h-7 border-gray-600 hover:text-slate-900 dark:text-white hover:bg-gray-700"
                             onClick={() => openDiscountModal(index)}
                           >
                             {item.discount && item.discount > 0 ? "Modificar Descuento" : "Agregar Descuento"}
@@ -1085,7 +1085,7 @@ export default function ClientsPage() {
               <Separator />
               <div className="flex items-center justify-between ">
                 <div>
-                  <p className="font-medium text-white">Total a Pagar</p>
+                  <p className="font-medium text-slate-900 dark:text-white">Total a Pagar</p>
                   <p className="text-sm text-gray-300">{getSelectedDeudasCount()} deuda(s) seleccionada(s)</p>
                 </div>
                 <div className="text-right">
@@ -1101,7 +1101,7 @@ export default function ClientsPage() {
               )}
 
               <div className="flex justify-end">
-                <Button className="bg-gray-200 text-gray-700 hover:bg-gray-500 hover:text-white" onClick={handleContinueToPayment} disabled={getSelectedDeudasCount() === 0}>
+                <Button className="bg-gray-200 text-gray-700 hover:bg-gray-500 hover:text-slate-900 dark:text-white" onClick={handleContinueToPayment} disabled={getSelectedDeudasCount() === 0}>
                   Continuar al Pago
                   <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
@@ -1136,7 +1136,7 @@ export default function ClientsPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4 text-white">
+          <div className="space-y-4 text-slate-900 dark:text-white">
             <div className="flex justify-between items-center">
               <span>Cliente:</span>
               {selectedClient?.cli_tipo === "NATURAL" ? (
@@ -1180,14 +1180,14 @@ export default function ClientsPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-white">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-slate-900 dark:text-white">
             <div>
               <Label htmlFor="payment-method">Método de Pago</Label>
               <Select value={paymentMethod} onValueChange={(value: any) => setPaymentMethod(value)}>
                 <SelectTrigger className="bg-gray-800 border-gray-700">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-gray-800 border-gray-700 text-white">
+                <SelectContent className="bg-gray-800 border-gray-700 text-slate-900 dark:text-white">
                   <SelectItem value="efectivo">Efectivo</SelectItem>
                   <SelectItem value="yape">Yape</SelectItem>
                   <SelectItem value="transferencia">Transferencia Bancaria</SelectItem>
@@ -1201,7 +1201,7 @@ export default function ClientsPage() {
                 <SelectTrigger className="bg-gray-800 border-gray-700">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-gray-800 border-gray-700 text-white">
+                <SelectContent className="bg-gray-800 border-gray-700 text-slate-900 dark:text-white">
                   <SelectItem value="boleta">Boleta de Venta</SelectItem>
                   <SelectItem value="factura">Factura</SelectItem>
                   <SelectItem value="recibo">Recibo</SelectItem>
@@ -1217,11 +1217,11 @@ export default function ClientsPage() {
           )}
 
           <div className="flex justify-end space-x-3">
-            <Button variant="outline" onClick={() => setCurrentStep("select-debts")} className="bg-transparent border-none text-white">
+            <Button variant="outline" onClick={() => setCurrentStep("select-debts")} className="bg-transparent border-none text-slate-900 dark:text-white">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Volver
             </Button>
-            <Button className="bg-gray-200 text-gray-700 hover:bg-gray-500 hover:text-white" onClick={handleProcessPayment} disabled={isProcessing}>
+            <Button className="bg-gray-200 text-gray-700 hover:bg-gray-500 hover:text-slate-900 dark:text-white" onClick={handleProcessPayment} disabled={isProcessing}>
               {isProcessing ? "Procesando..." : "Procesar Pago"}
             </Button>
           </div>
@@ -1281,11 +1281,11 @@ export default function ClientsPage() {
             </div>
 
             <div className="flex justify-center space-x-4 pt-4">
-              <Button onClick={handlePrintReceipt} className="bg-white text-black hover:bg-gray-700 hover:text-white">
+              <Button onClick={handlePrintReceipt} className="bg-white text-black hover:bg-gray-700 hover:text-slate-900 dark:text-white">
                 <Printer className="h-4 w-4 mr-2" />
                 Imprimir Comprobante
               </Button>
-              <Button onClick={handleNewPayment} className="bg-white text-black hover:bg-gray-700 hover:text-white">
+              <Button onClick={handleNewPayment} className="bg-white text-black hover:bg-gray-700 hover:text-slate-900 dark:text-white">
                 Nuevo Pago
               </Button>
             </div>
@@ -1301,12 +1301,12 @@ export default function ClientsPage() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-slate-900">
+        <div className="min-h-screen bg-gradient-to-br from-slate-100 dark:from-black via-slate-50 dark:via-gray-900 to-white dark:to-slate-900">
           <header className="flex h-16 items-center gap-2 border-b border-gray-700 bg-gray-800/50 backdrop-blur-xl px-4">
 
-            <SidebarTrigger className="-ml-1 text-white" />
+            <SidebarTrigger className="-ml-1 text-slate-900 dark:text-white" />
             <div className="flex-1">
-              <h1 className="text-xl font-semibold text-white">Cobranza</h1>
+              <h1 className="text-xl font-semibold text-slate-900 dark:text-white">Cobranza</h1>
             </div>
             <Navbar />
           </header>
@@ -1341,9 +1341,9 @@ export default function ClientsPage() {
                         <div key={step.key} className="flex items-center">
                           <div
                             className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${isActive
-                              ? "border-blue-600 bg-blue-600 text-white"
+                              ? "border-blue-600 bg-blue-600 text-slate-900 dark:text-white"
                               : isCompleted
-                                ? "border-green-600 bg-green-600 text-white"
+                                ? "border-green-600 bg-green-600 text-slate-900 dark:text-white"
                                 : "border-gray-400  text-gray-400"
                               }`}
                           >
@@ -1383,7 +1383,7 @@ export default function ClientsPage() {
         {isDiscountModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
             <div className="bg-gray-800 border border-gray-700 p-6 rounded-lg shadow-xl w-full max-w-md">
-              <h3 className="text-lg font-bold text-white mb-4">Agregar Descuento</h3>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Agregar Descuento</h3>
               <div className="space-y-4">
                 <div>
                   <Label className="text-gray-200">Monto del Descuento</Label>
@@ -1392,7 +1392,7 @@ export default function ClientsPage() {
                     placeholder="0.00"
                     value={discountAmount}
                     onChange={(e) => setDiscountAmount(e.target.value)}
-                    className="bg-gray-700 border-gray-600 text-white mt-1"
+                    className="bg-gray-700 border-gray-600 text-slate-900 dark:text-white mt-1"
                   />
                 </div>
                 <div>
@@ -1401,20 +1401,20 @@ export default function ClientsPage() {
                     placeholder="Razón del descuento..."
                     value={discountReason}
                     onChange={(e) => setDiscountReason(e.target.value)}
-                    className="bg-gray-700 border-gray-600 text-white mt-1"
+                    className="bg-gray-700 border-gray-600 text-slate-900 dark:text-white mt-1"
                   />
                 </div>
                 <div className="flex justify-end space-x-3 mt-6">
                   <Button
                     variant="ghost"
                     onClick={() => setIsDiscountModalOpen(false)}
-                    className="text-gray-300 hover:text-white"
+                    className="text-gray-300 hover:text-slate-900 dark:text-white"
                   >
                     Cancelar
                   </Button>
                   <Button
                     onClick={handleApplyDiscount}
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    className="bg-blue-600 hover:bg-blue-700 text-slate-900 dark:text-white"
                   >
                     Aplicar Descuento
                   </Button>
@@ -1427,7 +1427,7 @@ export default function ClientsPage() {
         {/* Modal Ver Pagos */}
         {showPagosModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-            <Card className="w-full max-w-4xl max-h-[80vh] overflow-hidden bg-gray-900 border-gray-700 text-white flex flex-col">
+            <Card className="w-full max-w-4xl max-h-[80vh] overflow-hidden bg-gray-900 border-gray-700 text-slate-900 dark:text-white flex flex-col">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle>Historial de Pagos - {selectedClient?.cli_nombre || selectedClient?.cli_razonsoci}</CardTitle>
                 <Button variant="ghost" size="icon" onClick={() => setShowPagosModal(false)}>
@@ -1487,7 +1487,7 @@ export default function ClientsPage() {
         {/* Modal Ver Trabajos */}
         {showTrabajosModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-            <Card className="w-full max-w-4xl max-h-[80vh] overflow-hidden bg-gray-900 border-gray-700 text-white flex flex-col">
+            <Card className="w-full max-w-4xl max-h-[80vh] overflow-hidden bg-gray-900 border-gray-700 text-slate-900 dark:text-white flex flex-col">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle>Historial de Trabajos - {selectedClient?.cli_nombre || selectedClient?.cli_razonsoci}</CardTitle>
                 <Button variant="ghost" size="icon" onClick={() => setShowTrabajosModal(false)}>

@@ -163,11 +163,11 @@ export default function OrdersPage() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-slate-900">
+        <div className="min-h-screen bg-gradient-to-br from-slate-100 dark:from-black via-slate-50 dark:via-gray-900 to-white dark:to-slate-900">
           <header className="flex h-16 shrink-0 items-center gap-2 border-b border-gray-700 bg-gray-800/50 backdrop-blur-xl px-4">
-            <SidebarTrigger className="-ml-1 text-white" />
+            <SidebarTrigger className="-ml-1 text-slate-900 dark:text-white" />
             <div className="flex-1">
-              <h1 className="text-xl font-semibold text-white">Gestión de Órdenes de Trabajo</h1>
+              <h1 className="text-xl font-semibold text-slate-900 dark:text-white">Gestión de Órdenes de Trabajo</h1>
               <p className="text-sm text-gray-400">Administra todas las órdenes de trabajo</p>
             </div>
           </header>
@@ -177,7 +177,7 @@ export default function OrdersPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-white">Órdenes de Trabajo</CardTitle>
+                    <CardTitle className="text-slate-900 dark:text-white">Órdenes de Trabajo</CardTitle>
                     <CardDescription className="text-gray-400">
                       Haz seguimiento de las ordenes que se te asignaron
                     </CardDescription>
@@ -188,20 +188,20 @@ export default function OrdersPage() {
               <CardContent>
                 <div className="flex items-center space-x-4 mb-6">
                   <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 dark:text-slate-500 dark:text-slate-400 w-4 h-4" />
                     <Input
                       placeholder="Buscar por cliente, tipo de trabajo, fecha programada, prioridad..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 bg-slate-700/50 border-slate-600 text-white"
+                      className="pl-10 bg-slate-300/50 dark:bg-slate-700/50 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white"
                     />
                   </div>
                   <Select value={filterStatus} onValueChange={setFilterStatus}>
-                    <SelectTrigger className="w-48 bg-slate-700/50 border-slate-600 text-white">
+                    <SelectTrigger className="w-48 bg-slate-300/50 dark:bg-slate-700/50 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white">
                       <Filter className="w-4 h-4 mr-2" />
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-800 border-slate-700 text-gray-300">
+                    <SelectContent className="bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-gray-300">
                       <SelectItem value="all">Todos los estados</SelectItem>
                       <SelectItem value="Pendiente">Pendiente</SelectItem>
                       <SelectItem value="En proceso">En proceso</SelectItem>
@@ -229,10 +229,10 @@ export default function OrdersPage() {
                           <TableCell className="text-gray-200">{order.client}</TableCell>
                           <TableCell className="text-gray-200">{order.type}</TableCell>
                           <TableCell>
-                            <Badge className={`${getStatusColor(order.status)} text-white`}>{order.status}</Badge>
+                            <Badge className={`${getStatusColor(order.status)} text-slate-900 dark:text-white`}>{order.status}</Badge>
                           </TableCell>
                           <TableCell>
-                            <Badge className={`${getPriorityColor(order.priority)} text-white`}>{order.priority}</Badge>
+                            <Badge className={`${getPriorityColor(order.priority)} text-slate-900 dark:text-white`}>{order.priority}</Badge>
                           </TableCell>
                           <TableCell className="text-gray-200">{order.technician}</TableCell>
                           <TableCell className="text-gray-200">{order.scheduledDate}</TableCell>
@@ -240,7 +240,7 @@ export default function OrdersPage() {
                             <div className="flex space-x-2">
                               {order.status === "Pendiente" && (
                                 <Button
-                                  className="bg-blue-600 text-white hover:bg-blue-300"
+                                  className="bg-blue-600 text-slate-900 dark:text-white hover:bg-blue-300"
                                   onClick={() => handleActualizarEstado(order.id, 2)} // Estado 2 para "Iniciar"
                                 >
                                   Iniciar
@@ -248,7 +248,7 @@ export default function OrdersPage() {
                               )}
                               {order.status === "En proceso" && (
                                 <Button
-                                  className="bg-green-600 text-white hover:bg-green-300"
+                                  className="bg-green-600 text-slate-900 dark:text-white hover:bg-green-300"
                                   onClick={() => handleActualizarEstado(order.id, 3)} // Estado 3 para "Finalizar"
                                 >
                                   Finalizar
@@ -261,7 +261,7 @@ export default function OrdersPage() {
                                   setSelectedOrder(order)
                                   setIsViewModalOpen(true)
                                 }}
-                                className="text-slate-400 hover:text-black"
+                                className="text-slate-400 dark:text-slate-500 dark:text-slate-400 hover:text-black"
                               >
                                 <Eye className="w-4 h-4" />Ver
                               </Button>
@@ -280,7 +280,7 @@ export default function OrdersPage() {
 
         {/* Modal de visualización */}
         <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
-          <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-2xl">
+          <DialogContent className="bg-gray-800 border-gray-700 text-slate-900 dark:text-white max-w-2xl">
             <DialogHeader>
               <DialogTitle>Detalles de la Orden de Trabajo</DialogTitle>
               <DialogDescription className="text-gray-400">
@@ -292,23 +292,23 @@ export default function OrdersPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-gray-400">Cliente</Label>
-                    <p className="text-white">{selectedOrder.client}</p>
+                    <p className="text-slate-900 dark:text-white">{selectedOrder.client}</p>
                   </div>
                   <div>
                     <Label className="text-gray-400">Tipo de Trabajo</Label>
-                    <p className="text-white">{selectedOrder.type}</p>
+                    <p className="text-slate-900 dark:text-white">{selectedOrder.type}</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-gray-400">Estado</Label>
-                    <Badge className={`${getStatusColor(selectedOrder.status)} text-white mt-1`}>
+                    <Badge className={`${getStatusColor(selectedOrder.status)} text-slate-900 dark:text-white mt-1`}>
                       {selectedOrder.status}
                     </Badge>
                   </div>
                   <div>
                     <Label className="text-gray-400">Prioridad</Label>
-                    <Badge className={`${getPriorityColor(selectedOrder.priority)} text-white mt-1`}>
+                    <Badge className={`${getPriorityColor(selectedOrder.priority)} text-slate-900 dark:text-white mt-1`}>
                       {selectedOrder.priority}
                     </Badge>
                   </div>
@@ -316,20 +316,20 @@ export default function OrdersPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-gray-400">Técnico Asignado</Label>
-                    <p className="text-white">{selectedOrder.technician}</p>
+                    <p className="text-slate-900 dark:text-white">{selectedOrder.technician}</p>
                   </div>
                   <div>
                     <Label className="text-gray-400">Fecha Programada</Label>
-                    <p className="text-white">{selectedOrder.scheduledDate}</p>
+                    <p className="text-slate-900 dark:text-white">{selectedOrder.scheduledDate}</p>
                   </div>
                 </div>
                 <div>
                   <Label className="text-gray-400">Dirección</Label>
-                  <p className="text-white">{selectedOrder.address}</p>
+                  <p className="text-slate-900 dark:text-white">{selectedOrder.address}</p>
                 </div>
                 <div>
                   <Label className="text-gray-400">Descripción</Label>
-                  <p className="text-white">{selectedOrder.description}</p>
+                  <p className="text-slate-900 dark:text-white">{selectedOrder.description}</p>
                 </div>
 
                 {selectedOrder && (
@@ -345,7 +345,7 @@ export default function OrdersPage() {
                             onClick={() => handleStepClick(step)}
                           >
                             <div className={`w-10 h-10 rounded-full flex items-center justify-center
-                              ${isActive ? 'bg-blue-500 text-white' : 'bg-gray-600 text-gray-300'}`}>
+                              ${isActive ? 'bg-blue-500 text-slate-900 dark:text-white' : 'bg-gray-600 text-gray-300'}`}>
                               {getStepIcon(step)}
                             </div>
                             <span className="text-sm mt-1 text-gray-300">{step}</span>

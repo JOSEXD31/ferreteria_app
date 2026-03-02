@@ -34,8 +34,8 @@ export function Navbar() {
                                         size="sm"
                                         className={
                                             isActive
-                                                ? "bg-gray-700/50 text-white hover:bg-gray-800 hover:text-white"
-                                                : "text-gray-200 hover:bg-gray-700/50 hover:text-white"
+                                                ? "bg-gray-700/50 text-slate-900 dark:text-white hover:bg-gray-800 hover:text-slate-900 dark:text-white"
+                                                : "text-gray-200 hover:bg-gray-700/50 hover:text-slate-900 dark:text-white"
                                         }
                                     >
                                         <Icon className="h-4 w-4 mr-2" />
@@ -53,7 +53,7 @@ export function Navbar() {
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="ghost" size="sm">
-                                        <Menu className="h-4 w-4 text-white" />
+                                        <Menu className="h-4 w-4 text-slate-900 dark:text-white" />
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-48">

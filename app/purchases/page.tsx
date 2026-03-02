@@ -50,7 +50,13 @@ export default function PurchasesPage() {
             ])
             const dataProd = await resProd.json()
             const dataProv = await resProv.json()
-            setProducts(Array.isArray(dataProd) ? dataProd : [])
+
+            const parsedProducts = Array.isArray(dataProd) ? dataProd.map((p: any) => ({
+                ...p,
+                precio_compra: Number(p.precio_compra) || 0
+            })) : []
+
+            setProducts(parsedProducts)
             setProviders(Array.isArray(dataProv) ? dataProv : [])
         } catch (error) {
             console.error("Error fetching data:", error)
@@ -60,10 +66,10 @@ export default function PurchasesPage() {
     const addToCart = (product: Product) => {
         const existingItem = cart.find(item => item.id_producto === product.id_producto)
         if (existingItem) {
-            setCart(cart.map(item => 
-                item.id_producto === product.id_producto 
-                ? { ...item, cantidad: item.cantidad + 1, subtotal: (item.cantidad + 1) * item.precio_compra_actual }
-                : item
+            setCart(cart.map(item =>
+                item.id_producto === product.id_producto
+                    ? { ...item, cantidad: item.cantidad + 1, subtotal: (item.cantidad + 1) * item.precio_compra_actual }
+                    : item
             ))
         } else {
             setCart([...cart, { ...product, cantidad: 1, precio_compra_actual: product.precio_compra || 0, subtotal: product.precio_compra || 0 }])
@@ -126,7 +132,7 @@ export default function PurchasesPage() {
         <SidebarProvider>
             <AppSidebar />
             <SidebarInset>
-                <div className="min-h-screen bg-slate-900 text-white p-6">
+                <div className="min-h-screen bg-white dark:bg-slate-900 text-slate-900 dark:text-white p-6">
                     <header className="mb-8 flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <SidebarTrigger />
@@ -139,7 +145,7 @@ export default function PurchasesPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                         {/* Selector de Proveedor y Búsqueda */}
                         <div className="lg:col-span-4 space-y-6">
-                            <Card className="bg-slate-800/50 border-slate-700">
+                            <Card className="bg-slate-200/50 dark:bg-slate-800/50 border-slate-300 dark:border-slate-700">
                                 <CardHeader>
                                     <CardTitle className="text-sm flex items-center gap-2">
                                         <Truck className="h-4 w-4" /> Proveedor
@@ -147,10 +153,10 @@ export default function PurchasesPage() {
                                 </CardHeader>
                                 <CardContent>
                                     <Select value={selectedProvider} onValueChange={setSelectedProvider}>
-                                        <SelectTrigger className="bg-slate-900 border-slate-700">
+                                        <SelectTrigger className="bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700">
                                             <SelectValue placeholder="Seleccionar proveedor..." />
                                         </SelectTrigger>
-                                        <SelectContent className="bg-slate-800 border-slate-700 text-white">
+                                        <SelectContent className="bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white">
                                             {Array.isArray(providers) && providers.map(p => (
                                                 <SelectItem key={p.id_proveedor} value={p.id_proveedor.toString()}>{p.nombre}</SelectItem>
                                             ))}
@@ -159,20 +165,20 @@ export default function PurchasesPage() {
                                 </CardContent>
                             </Card>
 
-                            <Card className="bg-slate-800/50 border-slate-700">
+                            <Card className="bg-slate-200/50 dark:bg-slate-800/50 border-slate-300 dark:border-slate-700">
                                 <CardHeader>
                                     <CardTitle className="text-sm">Buscar Productos</CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
-                                    <Input 
-                                        placeholder="Filtrar catálogo..." 
-                                        className="bg-slate-900 border-slate-700" 
+                                    <Input
+                                        placeholder="Filtrar catálogo..."
+                                        className="bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700"
                                         value={searchTerm}
                                         onChange={e => setSearchTerm(e.target.value)}
                                     />
                                     <div className="max-h-[400px] overflow-auto space-y-2 pr-2">
                                         {products.filter(p => p.nombre.toLowerCase().includes(searchTerm.toLowerCase())).map(p => (
-                                            <div key={p.id_producto} className="flex items-center justify-between p-2 rounded bg-slate-700/30 border border-slate-600">
+                                            <div key={p.id_producto} className="flex items-center justify-between p-2 rounded bg-slate-300/30 dark:bg-slate-700/30 border border-slate-300 dark:border-slate-600">
                                                 <span className="text-sm truncate mr-2">{p.nombre}</span>
                                                 <Button size="sm" variant="ghost" onClick={() => addToCart(p)} className="h-7 w-7 p-0 bg-blue-500/10 text-blue-400">
                                                     <Plus className="h-4 w-4" />
@@ -186,14 +192,14 @@ export default function PurchasesPage() {
 
                         {/* Detalle de la Compra */}
                         <div className="lg:col-span-8">
-                            <Card className="bg-slate-800/50 border-slate-700 min-h-[600px] flex flex-col">
-                                <CardHeader className="border-b border-slate-700">
+                            <Card className="bg-slate-200/50 dark:bg-slate-800/50 border-slate-300 dark:border-slate-700 min-h-[600px] flex flex-col">
+                                <CardHeader className="border-b border-slate-300 dark:border-slate-700">
                                     <CardTitle>Productos a Ingresar</CardTitle>
                                 </CardHeader>
                                 <CardContent className="p-0 flex-1">
                                     <Table>
-                                        <TableHeader className="bg-slate-700/30">
-                                            <TableRow className="border-slate-700">
+                                        <TableHeader className="bg-slate-300/30 dark:bg-slate-700/30">
+                                            <TableRow className="border-slate-300 dark:border-slate-700">
                                                 <TableHead>Producto</TableHead>
                                                 <TableHead className="w-[120px]">Precio Compra</TableHead>
                                                 <TableHead className="w-[100px]">Cantidad</TableHead>
@@ -203,22 +209,22 @@ export default function PurchasesPage() {
                                         </TableHeader>
                                         <TableBody>
                                             {cart.map(item => (
-                                                <TableRow key={item.id_producto} className="border-slate-700">
+                                                <TableRow key={item.id_producto} className="border-slate-300 dark:border-slate-700">
                                                     <TableCell className="font-medium">{item.nombre}</TableCell>
                                                     <TableCell>
-                                                        <Input 
-                                                            type="number" 
-                                                            value={item.precio_compra_actual} 
+                                                        <Input
+                                                            type="number"
+                                                            value={item.precio_compra_actual}
                                                             onChange={e => updateItem(item.id_producto, 'precio_compra_actual', parseFloat(e.target.value))}
-                                                            className="bg-slate-900 border-slate-700 text-xs h-8"
+                                                            className="bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-xs h-8"
                                                         />
                                                     </TableCell>
                                                     <TableCell>
-                                                        <Input 
-                                                            type="number" 
-                                                            value={item.cantidad} 
+                                                        <Input
+                                                            type="number"
+                                                            value={item.cantidad}
                                                             onChange={e => updateItem(item.id_producto, 'cantidad', parseFloat(e.target.value))}
-                                                            className="bg-slate-900 border-slate-700 text-xs h-8 text-center"
+                                                            className="bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-xs h-8 text-center"
                                                         />
                                                     </TableCell>
                                                     <TableCell className="text-right text-purple-400 font-semibold">S/ {item.subtotal.toFixed(2)}</TableCell>
@@ -232,12 +238,12 @@ export default function PurchasesPage() {
                                         </TableBody>
                                     </Table>
                                 </CardContent>
-                                <div className="p-6 border-t border-slate-700 bg-slate-900/30">
+                                <div className="p-6 border-t border-slate-300 dark:border-slate-700 bg-slate-100/30 dark:bg-slate-900/30">
                                     <div className="flex justify-between items-center mb-6">
-                                        <span className="text-slate-400 font-medium tracking-widest uppercase text-sm">Total de la Compra</span>
-                                        <span className="text-3xl font-bold text-white">S/ {total.toFixed(2)}</span>
+                                        <span className="text-slate-400 dark:text-slate-500 dark:text-slate-400 font-medium tracking-widest uppercase text-sm">Total de la Compra</span>
+                                        <span className="text-3xl font-bold text-slate-900 dark:text-white">S/ {total.toFixed(2)}</span>
                                     </div>
-                                    <Button 
+                                    <Button
                                         className="w-full bg-purple-600 hover:bg-purple-700 h-14 text-lg font-bold"
                                         disabled={loading || cart.length === 0}
                                         onClick={finalizePurchase}

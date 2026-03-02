@@ -99,7 +99,7 @@ export default function AddDeudaModal({
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
       {/* contenedor con ref para detectar clic fuera */}
       <div>
-        <Card className="relative w-full max-w-md bg-gray-900 border border-gray-700 text-white shadow-2xl animate-in fade-in-50 slide-in-from-bottom-2">
+        <Card className="relative w-full max-w-md bg-gray-900 border border-gray-700 text-slate-900 dark:text-white shadow-2xl animate-in fade-in-50 slide-in-from-bottom-2">
           <CardHeader>
             <CardTitle className="text-xl text-center text-gray-100">
               Agregar Deuda
@@ -111,11 +111,11 @@ export default function AddDeudaModal({
             <div className="space-y-1">
               <Label>Tipo de deuda</Label>
               <Select value={tipo} onValueChange={(v) => setTipo(v)}>
-                <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
+                <SelectTrigger className="bg-gray-800 border-gray-700 text-slate-900 dark:text-white">
                   <SelectValue placeholder="Seleccionar..." />
                 </SelectTrigger>
                 {/* 🔹 Aseguramos que el dropdown esté por encima del modal */}
-                <SelectContent className="z-[10000] bg-gray-800 text-white border-gray-700">
+                <SelectContent className="z-[10000] bg-gray-800 text-slate-900 dark:text-white border-gray-700">
                   <SelectItem value="RECONEXION">RECONEXIÓN</SelectItem>
                   <SelectItem value="MENSUALIDAD">MENSUALIDAD</SelectItem>
                   <SelectItem value="OTROS">OTROS</SelectItem>
@@ -128,10 +128,10 @@ export default function AddDeudaModal({
               <div className="space-y-1">
                 <Label>Mes</Label>
                 <Select value={mes} onValueChange={(v) => setMes(v)}>
-                  <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
+                  <SelectTrigger className="bg-gray-800 border-gray-700 text-slate-900 dark:text-white">
                     <SelectValue placeholder="Mes..." />
                   </SelectTrigger>
-                  <SelectContent className="z-[10000] bg-gray-800 text-white border-gray-700">
+                  <SelectContent className="z-[10000] bg-gray-800 text-slate-900 dark:text-white border-gray-700">
                     {meses.map((m) => (
                       <SelectItem key={m} value={m}>
                         {m}
@@ -144,10 +144,10 @@ export default function AddDeudaModal({
               <div className="space-y-1">
                 <Label>Año</Label>
                 <Select value={ano} onValueChange={(v) => setAno(v)}>
-                  <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
+                  <SelectTrigger className="bg-gray-800 border-gray-700 text-slate-900 dark:text-white">
                     <SelectValue placeholder="Año..." />
                   </SelectTrigger>
-                  <SelectContent className="z-[10000] bg-gray-800 text-white border-gray-700">
+                  <SelectContent className="z-[10000] bg-gray-800 text-slate-900 dark:text-white border-gray-700">
                     <SelectItem value={(currentYear - 1).toString()}>{currentYear - 1}</SelectItem>
                     <SelectItem value={currentYear.toString()}>{currentYear}</SelectItem>
                     <SelectItem value={(currentYear + 1).toString()}>{currentYear + 1}</SelectItem>
@@ -165,7 +165,7 @@ export default function AddDeudaModal({
                     value={detalle}
                     onChange={(e) => setDetalle(e.target.value)}
                     placeholder="Indique la descripción"
-                    className="bg-gray-800 border-gray-700 text-white"
+                    className="bg-gray-800 border-gray-700 text-slate-900 dark:text-white"
                   />
                 </div>
 
@@ -177,7 +177,7 @@ export default function AddDeudaModal({
                     value={monto}
                     onChange={(e) => setMonto(e.target.value)}
                     placeholder="Ingrese monto"
-                    className="bg-gray-800 border-gray-700 text-white"
+                    className="bg-gray-800 border-gray-700 text-slate-900 dark:text-white"
                   />
                 </div>
               </>
@@ -188,14 +188,14 @@ export default function AddDeudaModal({
               <Button
                 variant="secondary"
                 onClick={onClose}
-                className="bg-gray-700 hover:bg-gray-600 text-white"
+                className="bg-gray-700 hover:bg-gray-600 text-slate-900 dark:text-white"
               >
                 Cancelar
               </Button>
               <Button
                 disabled={loading}
                 onClick={handleSubmit}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+                className="bg-blue-600 hover:bg-blue-700 text-slate-900 dark:text-white"
               >
                 {loading ? "Guardando..." : "Guardar"}
               </Button>

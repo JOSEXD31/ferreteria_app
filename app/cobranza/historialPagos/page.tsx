@@ -447,7 +447,7 @@ export default function ClientsPage() {
     <div className="space-y-6">
       <Card className="rounded-md border border-gray-700 bg-gray-800/30">
         <CardHeader>
-          <CardTitle className="flex items-center text-white">
+          <CardTitle className="flex items-center text-slate-900 dark:text-white">
             Buscar Cliente
           </CardTitle>
         </CardHeader>
@@ -459,7 +459,7 @@ export default function ClientsPage() {
                 placeholder="Buscar por nombre, DNI, teléfono o email..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-gray-700/50 border-gray-600 text-white"
+                className="pl-10 bg-gray-700/50 border-gray-600 text-slate-900 dark:text-white"
               />
             </div>
 
@@ -633,7 +633,7 @@ export default function ClientsPage() {
                       </td>
                       <td className="px-4 py-2 align-top">
                         <Button onClick={() => handlePrintReceipt(pago.cod_comprobante)}
-                          className="bg-white text-black hover:bg-gray-700 hover:text-white h-8 text-xs">
+                          className="bg-white text-black hover:bg-gray-700 hover:text-slate-900 dark:text-white h-8 text-xs">
                           <Printer className="h-4 w-4 mr-2" />
                           Reimprimir
                         </Button>
@@ -654,12 +654,12 @@ export default function ClientsPage() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-slate-900">
+        <div className="min-h-screen bg-gradient-to-br from-slate-100 dark:from-black via-slate-50 dark:via-gray-900 to-white dark:to-slate-900">
           <header className="flex h-16 items-center gap-2 border-b border-gray-700 bg-gray-800/50 backdrop-blur-xl px-4">
 
-            <SidebarTrigger className="-ml-1 text-white" />
+            <SidebarTrigger className="-ml-1 text-slate-900 dark:text-white" />
             <div className="flex-1">
-              <h1 className="text-xl font-semibold text-white">Cobranza</h1>
+              <h1 className="text-xl font-semibold text-slate-900 dark:text-white">Cobranza</h1>
             </div>
             <Navbar />
           </header>
@@ -691,9 +691,9 @@ export default function ClientsPage() {
                         <div key={step.key} className="flex items-center">
                           <div
                             className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${isActive
-                              ? "border-blue-600 bg-blue-600 text-white"
+                              ? "border-blue-600 bg-blue-600 text-slate-900 dark:text-white"
                               : isCompleted
-                                ? "border-green-600 bg-green-600 text-white"
+                                ? "border-green-600 bg-green-600 text-slate-900 dark:text-white"
                                 : "border-gray-400  text-gray-400"
                               }`}
                           >

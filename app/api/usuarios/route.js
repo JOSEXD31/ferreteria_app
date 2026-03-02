@@ -75,3 +75,75 @@ export async function POST(request) {
         )
     }
 }
+
+export async function PUT(request) {
+    try {
+        const body = await request.json()
+        const { id_usuario, nombre, usuario, password, rol } = body
+
+        if (!id_usuario || !nombre || !rol) {
+            return NextResponse.json(
+                { success: false, message: "Faltan campos obligatorios" },
+                { status: 400 }
+            )
+        }
+
+        const dataToUpdate = {
+            nombre,
+            rol,
+            ...(usuario && { usuario })
+        }
+
+        if (password && password.trim() !== '') {
+            dataToUpdate.password = await bcrypt.hash(password, 10)
+        }
+
+        const usuarioActualizado = await prisma.usuario.update({
+            where: { id_usuario: parseInt(id_usuario) },
+            data: dataToUpdate,
+        })
+
+        return NextResponse.json({
+            success: true,
+            message: "Usuario actualizado correctamente",
+            usuario: {
+                id_usuario: usuarioActualizado.id_usuario,
+                nombre: usuarioActualizado.nombre,
+                rol: usuarioActualizado.rol,
+            },
+        })
+    } catch (error) {
+        console.error("Error al actualizar usuario:", error)
+        return NextResponse.json(
+            { success: false, message: "Error al actualizar el usuario" },
+            { status: 500 }
+        )
+    }
+}
+
+export async function DELETE(request) {
+    try {
+        const { searchParams } = new URL(request.url)
+        const id = searchParams.get('id')
+
+        if (!id) {
+            return NextResponse.json(
+                { success: false, message: "ID de usuario es obligatorio" },
+                { status: 400 }
+            )
+        }
+
+        await prisma.usuario.update({
+            where: { id_usuario: parseInt(id) },
+            data: { estado: 0 },
+        })
+
+        return NextResponse.json({ success: true, message: "Usuario desactivado correctamente" })
+    } catch (error) {
+        console.error("Error al desactivar usuario:", error)
+        return NextResponse.json(
+            { success: false, message: "Error al desactivar el usuario" },
+            { status: 500 }
+        )
+    }
+}

@@ -151,11 +151,11 @@ export default function ClientsPage() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-slate-900">
+        <div className="min-h-screen bg-gradient-to-br from-slate-100 dark:from-black via-slate-50 dark:via-gray-900 to-white dark:to-slate-900">
           <header className="flex h-16 shrink-0 items-center gap-2 border-b border-gray-700 bg-gray-800/50 backdrop-blur-xl px-4">
-            <SidebarTrigger className="-ml-1 text-white" />
+            <SidebarTrigger className="-ml-1 text-slate-900 dark:text-white" />
             <div className="flex-1">
-              <h1 className="text-xl font-semibold text-white">Distribución de la RED</h1>
+              <h1 className="text-xl font-semibold text-slate-900 dark:text-white">Distribución de la RED</h1>
             </div>
             <Navbar />
           </header>
@@ -171,7 +171,7 @@ export default function ClientsPage() {
                       Agregar Nodo
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-2xl">
+                  <DialogContent className="bg-gray-800 border-gray-700 text-slate-900 dark:text-white max-w-2xl">
                     <DialogHeader>
                       <DialogTitle>Añadir Nuevo Nodo</DialogTitle>
                       <DialogDescription className="text-gray-400">
@@ -198,7 +198,7 @@ export default function ClientsPage() {
                             <SelectTrigger className="bg-gray-700 border-gray-600">
                               <SelectValue placeholder="Seleccionar el numero de cajas" />
                             </SelectTrigger>
-                            <SelectContent className="bg-gray-800 border-gray-700 text-white">
+                            <SelectContent className="bg-gray-800 border-gray-700 text-slate-900 dark:text-white">
                               <SelectItem value="4">4 Cajas</SelectItem>
                               <SelectItem value="8">8 Cajas</SelectItem>
                               <SelectItem value="16">16 Cajas</SelectItem>
@@ -262,12 +262,12 @@ export default function ClientsPage() {
                     </div>
 
                     <div className="flex justify-end space-x-2 text-black">
-                      <Button variant="outline" onClick={() => setIsCreateModalOpen(false)} className="hover:bg-gray-600 hover:text-white transition">
+                      <Button variant="outline" onClick={() => setIsCreateModalOpen(false)} className="hover:bg-gray-600 hover:text-slate-900 dark:text-white transition">
                         Cancelar
                       </Button>
                       <Button
                         onClick={creacion_nodo}
-                        className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 text-white hover:to-blue-700 transition"
+                        className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 text-slate-900 dark:text-white hover:to-blue-700 transition"
                       >
                         Añadir Caja
                       </Button>

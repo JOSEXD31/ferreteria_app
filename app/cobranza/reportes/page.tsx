@@ -91,11 +91,11 @@ export default function ReportsPage() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-slate-900 text-gray-100">
+        <div className="min-h-screen bg-gradient-to-br from-slate-100 dark:from-black via-slate-50 dark:via-gray-900 to-white dark:to-slate-900 text-gray-100">
           <header className="flex h-16 items-center gap-2 border-b border-gray-700 bg-gray-800/50 backdrop-blur-xl px-4">
-            <SidebarTrigger className="-ml-1 text-white" />
+            <SidebarTrigger className="-ml-1 text-slate-900 dark:text-white" />
             <div className="flex-1">
-              <h1 className="text-xl font-semibold text-white">Cobranza</h1>
+              <h1 className="text-xl font-semibold text-slate-900 dark:text-white">Cobranza</h1>
             </div>
             <Navbar />
           </header>
@@ -144,7 +144,7 @@ export default function ReportsPage() {
                       <label className="text-sm mb-1">Desde</label>
                       <input
                         type="date"
-                        className="bg-gray-800 text-white border border-gray-600 px-3 py-2 rounded"
+                        className="bg-gray-800 text-slate-900 dark:text-white border border-gray-600 px-3 py-2 rounded"
                         value={desde}
                         onChange={(e) => setDesde(e.target.value)}
                       />
@@ -153,7 +153,7 @@ export default function ReportsPage() {
                       <label className="text-sm mb-1">Hasta</label>
                       <input
                         type="date"
-                        className="bg-gray-800 text-white border border-gray-600 px-3 py-2 rounded"
+                        className="bg-gray-800 text-slate-900 dark:text-white border border-gray-600 px-3 py-2 rounded"
                         value={hasta}
                         onChange={(e) => setHasta(e.target.value)}
                       />

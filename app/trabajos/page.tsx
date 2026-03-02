@@ -105,8 +105,8 @@ export default function TrabajosPage() {
         <SidebarProvider>
             <AppSidebar />
             <SidebarInset>
-                <div className="min-h-screen bg-slate-950 text-white">
-                    <header className="h-16 border-b border-slate-800 flex items-center px-6 justify-between bg-slate-900/50 backdrop-blur-xl">
+                <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white">
+                    <header className="h-16 border-b border-slate-200 dark:border-slate-800 flex items-center px-6 justify-between bg-slate-100/50 dark:bg-slate-900/50 backdrop-blur-xl">
                         <div className="flex items-center gap-4">
                             <SidebarTrigger />
                             <h1 className="text-xl font-bold flex items-center gap-2">
@@ -117,9 +117,9 @@ export default function TrabajosPage() {
 
                     <div className="p-6">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                            <Card className="bg-slate-900 border-slate-800">
+                            <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
                                 <CardHeader className="pb-2">
-                                    <CardTitle className="text-slate-400 text-xs uppercase flex items-center gap-2">
+                                    <CardTitle className="text-slate-400 dark:text-slate-500 dark:text-slate-400 text-xs uppercase flex items-center gap-2">
                                         <Clock className="w-3 h-3" /> Pendientes
                                     </CardTitle>
                                 </CardHeader>
@@ -127,9 +127,9 @@ export default function TrabajosPage() {
                                     <div className="text-3xl font-bold">{trabajos.filter(t => t.estado === 'pendiente').length}</div>
                                 </CardContent>
                             </Card>
-                            <Card className="bg-slate-900 border-slate-800">
+                            <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
                                 <CardHeader className="pb-2">
-                                    <CardTitle className="text-slate-400 text-xs uppercase flex items-center gap-2">
+                                    <CardTitle className="text-slate-400 dark:text-slate-500 dark:text-slate-400 text-xs uppercase flex items-center gap-2">
                                         <Wrench className="w-3 h-3" /> En Ejecución
                                     </CardTitle>
                                 </CardHeader>
@@ -137,9 +137,9 @@ export default function TrabajosPage() {
                                     <div className="text-3xl font-bold text-blue-400">{trabajos.filter(t => t.estado === 'en_proceso').length}</div>
                                 </CardContent>
                             </Card>
-                            <Card className="bg-slate-900 border-slate-800">
+                            <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
                                 <CardHeader className="pb-2">
-                                    <CardTitle className="text-slate-400 text-xs uppercase flex items-center gap-2">
+                                    <CardTitle className="text-slate-400 dark:text-slate-500 dark:text-slate-400 text-xs uppercase flex items-center gap-2">
                                         <CheckCircle className="w-3 h-3" /> Completados hoy
                                     </CardTitle>
                                 </CardHeader>
@@ -149,7 +149,7 @@ export default function TrabajosPage() {
                             </Card>
                         </div>
 
-                        <Card className="bg-slate-900 border-slate-800">
+                        <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
                             <CardHeader>
                                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                     <div>
@@ -162,7 +162,7 @@ export default function TrabajosPage() {
                                                 <Plus className="w-4 h-4 mr-2" /> Programar Servicio
                                             </Button>
                                         </DialogTrigger>
-                                        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-xl">
+                                        <DialogContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white max-w-xl">
                                             <DialogHeader>
                                                 <DialogTitle>Nueva Orden de Servicio</DialogTitle>
                                             </DialogHeader>
@@ -170,10 +170,10 @@ export default function TrabajosPage() {
                                                 <div className="space-y-2">
                                                     <Label>Cliente</Label>
                                                     <Select onValueChange={v => setFormData({...formData, id_cliente: v})}>
-                                                        <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
+                                                        <SelectTrigger className="bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white">
                                                             <SelectValue placeholder="Seleccionar cliente..." />
                                                         </SelectTrigger>
-                                                        <SelectContent className="bg-slate-800 border-slate-700 text-white">
+                                                        <SelectContent className="bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white">
                                                             {clientes.map((c: any) => (
                                                                 <SelectItem key={c.id_cliente} value={c.id_cliente.toString()}>{c.nombre}</SelectItem>
                                                             ))}
@@ -184,10 +184,10 @@ export default function TrabajosPage() {
                                                     <div className="space-y-2">
                                                         <Label>Técnico Asignado</Label>
                                                         <Select onValueChange={v => setFormData({...formData, id_tecnico: v})}>
-                                                            <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
+                                                            <SelectTrigger className="bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white">
                                                                 <SelectValue placeholder="Seleccionar..." />
                                                             </SelectTrigger>
-                                                            <SelectContent className="bg-slate-800 border-slate-700 text-white">
+                                                            <SelectContent className="bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white">
                                                                 {tecnicos.map((t: any) => (
                                                                     <SelectItem key={t.id_tecnico} value={t.id_tecnico.toString()}>{t.nombre}</SelectItem>
                                                                 ))}
@@ -196,12 +196,12 @@ export default function TrabajosPage() {
                                                     </div>
                                                     <div className="space-y-2">
                                                         <Label>Fecha de Inicio</Label>
-                                                        <Input type="datetime-local" className="bg-slate-800 border-slate-700" onChange={e => setFormData({...formData, fecha_inicio: e.target.value})} />
+                                                        <Input type="datetime-local" className="bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700" onChange={e => setFormData({...formData, fecha_inicio: e.target.value})} />
                                                     </div>
                                                 </div>
                                                 <div className="space-y-2">
                                                     <Label>Requerimiento / Descripción</Label>
-                                                    <Textarea className="bg-slate-800 border-slate-700" rows={4} onChange={e => setFormData({...formData, descripcion: e.target.value})} />
+                                                    <Textarea className="bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700" rows={4} onChange={e => setFormData({...formData, descripcion: e.target.value})} />
                                                 </div>
                                             </div>
                                             <div className="flex justify-end gap-2">
@@ -214,19 +214,19 @@ export default function TrabajosPage() {
                             </CardHeader>
                             <CardContent>
                                 <div className="mb-6 relative">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 w-4 h-4" />
                                     <Input 
                                         placeholder="Buscar por descripción o cliente..." 
-                                        className="pl-10 bg-slate-950 border-slate-800 max-w-sm"
+                                        className="pl-10 bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 max-w-sm"
                                         value={searchTerm}
                                         onChange={e => setSearchTerm(e.target.value)}
                                     />
                                 </div>
 
-                                <div className="rounded-xl border border-slate-800 overflow-hidden">
+                                <div className="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
                                     <Table>
-                                        <TableHeader className="bg-slate-800/50">
-                                            <TableRow className="border-slate-800 hover:bg-slate-800/50">
+                                        <TableHeader className="bg-slate-200/50 dark:bg-slate-800/50">
+                                            <TableRow className="border-slate-200 dark:border-slate-800 hover:bg-slate-200/50 dark:bg-slate-800/50">
                                                 <TableHead>Servicio / Descripción</TableHead>
                                                 <TableHead>Progreso</TableHead>
                                                 <TableHead>Asignado a</TableHead>
@@ -236,12 +236,12 @@ export default function TrabajosPage() {
                                         </TableHeader>
                                         <TableBody>
                                             {loading ? (
-                                                <TableRow><TableCell colSpan={5} className="text-center py-10 text-slate-500">Cargando trabajos...</TableCell></TableRow>
+                                                <TableRow><TableCell colSpan={5} className="text-center py-10 text-slate-400 dark:text-slate-500">Cargando trabajos...</TableCell></TableRow>
                                             ) : filteredTrabajos.map(t => (
-                                                <TableRow key={t.id_trabajo} className="border-slate-800 hover:bg-slate-800/20">
+                                                <TableRow key={t.id_trabajo} className="border-slate-200 dark:border-slate-800 hover:bg-slate-200/20 dark:bg-slate-800/20">
                                                     <TableCell className="max-w-[300px]">
-                                                        <div className="font-medium text-slate-200 truncate">{t.descripcion}</div>
-                                                        <div className="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                                                        <div className="font-medium text-slate-800 dark:text-slate-200 truncate">{t.descripcion}</div>
+                                                        <div className="text-xs text-slate-400 dark:text-slate-500 mt-1 flex items-center gap-1">
                                                             <Clock className="w-3 h-3" /> {new Date(t.fecha_inicio).toLocaleString()}
                                                         </div>
                                                     </TableCell>
@@ -256,12 +256,12 @@ export default function TrabajosPage() {
                                                     </TableCell>
                                                     <TableCell>
                                                         <div className="text-sm">{t.cliente?.nombre}</div>
-                                                        <div className="text-[10px] text-slate-500 flex items-center gap-1">
+                                                        <div className="text-[10px] text-slate-400 dark:text-slate-500 flex items-center gap-1">
                                                             <MapPin className="w-2 h-2" /> {t.cliente?.direccion}
                                                         </div>
                                                     </TableCell>
                                                     <TableCell className="text-right">
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white">
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 dark:text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white">
                                                             <Eye className="h-4 w-4" />
                                                         </Button>
                                                     </TableCell>

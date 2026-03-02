@@ -55,8 +55,8 @@ export default function ReportsPage() {
         <SidebarProvider>
             <AppSidebar />
             <SidebarInset>
-                <div className="min-h-screen bg-slate-950 text-white">
-                    <header className="h-16 border-b border-slate-800 flex items-center px-6 justify-between bg-slate-900/50 backdrop-blur-xl">
+                <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white">
+                    <header className="h-16 border-b border-slate-200 dark:border-slate-800 flex items-center px-6 justify-between bg-slate-100/50 dark:bg-slate-900/50 backdrop-blur-xl">
                         <div className="flex items-center gap-4">
                             <SidebarTrigger />
                             <h1 className="text-xl font-bold flex items-center gap-2">
@@ -67,11 +67,11 @@ export default function ReportsPage() {
 
                     <div className="p-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-                            <Card className="bg-slate-900 border-slate-800">
+                            <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
                                 <CardContent className="pt-6">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <p className="text-slate-500 text-xs font-bold uppercase">Crecimiento Mensual</p>
+                                            <p className="text-slate-400 dark:text-slate-500 text-xs font-bold uppercase">Crecimiento Mensual</p>
                                             <h3 className="text-2xl font-bold text-emerald-400">+12.4%</h3>
                                         </div>
                                         <TrendingUp className="text-emerald-500 w-10 h-10 opacity-20" />
@@ -83,31 +83,31 @@ export default function ReportsPage() {
 
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                             {reports.map((report) => (
-                                <Card key={report.id} className="bg-slate-900 border-slate-800 hover:border-slate-700 transition-all group">
+                                <Card key={report.id} className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:border-slate-700 transition-all group">
                                     <CardHeader className="flex flex-row items-center gap-6">
-                                        <div className="p-4 rounded-2xl bg-slate-800 group-hover:scale-110 transition-transform">
+                                        <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 group-hover:scale-110 transition-transform">
                                             {report.icon}
                                         </div>
                                         <div>
                                             <CardTitle className="text-xl">{report.title}</CardTitle>
-                                            <CardDescription className="text-slate-400">{report.description}</CardDescription>
+                                            <CardDescription className="text-slate-400 dark:text-slate-500 dark:text-slate-400">{report.description}</CardDescription>
                                         </div>
                                     </CardHeader>
                                     <CardContent>
                                         <div className="grid grid-cols-2 gap-4 mb-6">
                                             <div className="space-y-2">
-                                                <Label className="text-xs text-slate-500">Desde</Label>
-                                                <Input type="date" className="bg-slate-950 border-slate-800" />
+                                                <Label className="text-xs text-slate-400 dark:text-slate-500">Desde</Label>
+                                                <Input type="date" className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800" />
                                             </div>
                                             <div className="space-y-2">
-                                                <Label className="text-xs text-slate-500">Hasta</Label>
-                                                <Input type="date" className="bg-slate-950 border-slate-800" />
+                                                <Label className="text-xs text-slate-400 dark:text-slate-500">Hasta</Label>
+                                                <Input type="date" className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800" />
                                             </div>
                                         </div>
                                         <div className="flex gap-3">
                                             <Button 
                                                 onClick={() => handleGenerate(report.id, 'PDF')}
-                                                className="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300"
+                                                className="flex-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300"
                                             >
                                                 <FileText className="w-4 h-4 mr-2" /> PDF
                                             </Button>

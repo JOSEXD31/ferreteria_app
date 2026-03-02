@@ -13,6 +13,9 @@ import {
   ShoppingCart,
   Shield,
   BarChart3,
+  Tags,
+  Scale,
+  Truck
 } from "lucide-react"
 
 import {
@@ -26,8 +29,13 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
   SidebarRail,
 } from "@/components/ui/sidebar"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import Link from "next/link"
@@ -50,7 +58,14 @@ export function AppSidebar() {
     router.push("/")
   }
 
-  const baseMenuItems = [
+  type MenuItem = {
+    title: string;
+    url: string;
+    icon: any;
+    items?: { title: string; url: string }[];
+  }
+
+  const baseMenuItems: MenuItem[] = [
     {
       title: "Dashboard",
       url: "/dashboard",
@@ -58,7 +73,7 @@ export function AppSidebar() {
     },
   ]
 
-  const getAdditionalMenuItems = () => {
+  const getAdditionalMenuItems = (): MenuItem[] => {
     switch (userRole) {
       case "admin":
         return [
@@ -66,6 +81,25 @@ export function AppSidebar() {
             title: "Inventario",
             url: "/inventory",
             icon: Package,
+          },
+          {
+            title: "Mantenimiento / Config",
+            icon: Wrench,
+            url: "#",
+            items: [
+              {
+                title: "Proveedores",
+                url: "/proveedores",
+              },
+              {
+                title: "Categorías",
+                url: "/categorias",
+              },
+              {
+                title: "Unidades",
+                url: "/unidades",
+              }
+            ]
           },
           {
             title: "Ventas",
@@ -165,8 +199,8 @@ export function AppSidebar() {
   const allMenuItems = [...baseMenuItems, ...getAdditionalMenuItems()]
 
   return (
-    <Sidebar className="border-r border-gray-700 bg-gray-800 backdrop-blur-xl text-white [--sidebar-background:theme(colors.gray.800)] [--sidebar-foreground:theme(colors.white)] [--sidebar-border:theme(colors.gray.700)]">
-      <SidebarHeader className="border-b bg-white p-2">
+    <Sidebar className="border-r border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 backdrop-blur-xl text-slate-900 dark:text-white [--sidebar-background:theme(colors.white)] dark:[--sidebar-background:theme(colors.gray.800)] [--sidebar-foreground:theme(colors.slate.900)] dark:[--sidebar-foreground:theme(colors.white)] [--sidebar-border:theme(colors.slate.200)] dark:[--sidebar-border:theme(colors.gray.700)]">
+      <SidebarHeader className="border-b border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-gray-800/50 p-2">
         <div className="flex flex-col items-center space-x-3">
           <Image
             src="/tufibra_logo.webp"
@@ -180,44 +214,71 @@ export function AppSidebar() {
 
       <SidebarContent className="p-2">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-slate-400 text-xs uppercase tracking-wider">
+          <SidebarGroupLabel className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">
             Navegación Principal
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {allMenuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild className="text-gray-200 hover:bg-gray-700/50 hover:text-white">
-                    <Link href={item.url}>
-                      <item.icon className="w-4 h-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                item.items ? (
+                  <Collapsible key={item.title} asChild className="group/collapsible">
+                    <SidebarMenuItem>
+                      <CollapsibleTrigger asChild>
+                        <SidebarMenuButton className="text-slate-600 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-gray-700/50 hover:text-slate-900 dark:hover:text-white">
+                          <item.icon className="w-4 h-4" />
+                          <span>{item.title}</span>
+                          <ChevronRight className="ml-auto w-4 h-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                        </SidebarMenuButton>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <SidebarMenuSub>
+                          {item.items.map((subItem) => (
+                            <SidebarMenuSubItem key={subItem.title}>
+                              <SidebarMenuSubButton asChild className="text-gray-400 hover:text-slate-900 dark:text-white hover:bg-gray-700/50">
+                                <Link href={subItem.url}>
+                                  <span>{subItem.title}</span>
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          ))}
+                        </SidebarMenuSub>
+                      </CollapsibleContent>
+                    </SidebarMenuItem>
+                  </Collapsible>
+                ) : (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild className="text-slate-600 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-gray-700/50 hover:text-slate-900 dark:hover:text-white">
+                      <Link href={item.url}>
+                        <item.icon className="w-4 h-4" />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-gray-700 p-4">
+      <SidebarFooter className="border-t border-slate-200 dark:border-gray-700 p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Avatar className="w-8 h-8">
-              <AvatarFallback className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-sm">
+              <AvatarFallback className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-sm">
                 {username ? username.charAt(0).toUpperCase() : "U"}
               </AvatarFallback>
             </Avatar>
             <div>
-              <p className="text-sm font-medium text-white">{username}</p>
-              <p className="text-xs text-slate-400">{userRole}</p>
+              <p className="text-sm font-medium text-slate-800 dark:text-white">{username}</p>
+              <p className="text-xs text-slate-500 dark:text-gray-400">{userRole}</p>
             </div>
           </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={handleLogout}
-            className="text-gray-400 hover:text-white hover:bg-gray-700/50"
+            className="text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-gray-700/50"
           >
             <LogOut className="w-4 h-4" />
           </Button>

@@ -367,7 +367,7 @@ export default function ClientsPage() {
     <div className="space-y-6">
       <Card className="rounded-md border border-gray-700 bg-gray-800/30">
         <CardHeader>
-          <CardTitle className="flex items-center text-white">
+          <CardTitle className="flex items-center text-slate-900 dark:text-white">
             Buscar Cliente
           </CardTitle>
         </CardHeader>
@@ -379,7 +379,7 @@ export default function ClientsPage() {
                 placeholder="Buscar por nombre, DNI, teléfono o email..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-gray-700/50 border-gray-600 text-white"
+                className="pl-10 bg-gray-700/50 border-gray-600 text-slate-900 dark:text-white"
               />
             </div>
 
@@ -494,13 +494,13 @@ export default function ClientsPage() {
       {/* Debts Selection */}
       <Card className="rounded-md border border-gray-700 bg-gray-800/30">
         <CardContent className="p-6">
-          <h3 className="text-lg font-medium text-white mb-4">Lista de Deudas</h3>
+          <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-4">Lista de Deudas</h3>
 
           {selectedDeudas.length === 0 ? (
             <p className="text-center text-gray-300">No hay deudas registradas.</p>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full text-sm text-white">
+              <table className="min-w-full text-sm text-slate-900 dark:text-white">
                 <thead>
                   <tr className="text-left border-b border-gray-600">
                     <th className="p-2">Descripción</th>
@@ -556,7 +556,7 @@ export default function ClientsPage() {
         {/* Modal de Edición */}
         {editingDeuda && (
           <Dialog open={true} onOpenChange={() => setEditingDeuda(null)}>
-            <DialogContent className="bg-gray-800 border border-gray-600 text-white">
+            <DialogContent className="bg-gray-800 border border-gray-600 text-slate-900 dark:text-white">
               <DialogTitle>Modificar Deuda</DialogTitle>
               <div className="space-y-4 mt-2">
                 <div>
@@ -565,7 +565,7 @@ export default function ClientsPage() {
                     type="number"
                     value={editedData.monto}
                     onChange={(e) => setEditedData({ ...editedData, monto: e.target.value })}
-                    className="bg-gray-700 text-white border-gray-500"
+                    className="bg-gray-700 text-slate-900 dark:text-white border-gray-500"
                   />
                 </div>
                 <div>
@@ -574,7 +574,7 @@ export default function ClientsPage() {
                     type="number"
                     value={editedData.saldo_pendiente}
                     onChange={(e) => setEditedData({ ...editedData, saldo_pendiente: e.target.value })}
-                    className="bg-gray-700 text-white border-gray-500"
+                    className="bg-gray-700 text-slate-900 dark:text-white border-gray-500"
                   />
                 </div>
 
@@ -583,7 +583,7 @@ export default function ClientsPage() {
                   <Textarea
                     value={editDialog.motivo}
                     onChange={(e) => setEditDialog({ ...editDialog, motivo: e.target.value })}
-                    className="bg-gray-700 text-white border-gray-500"
+                    className="bg-gray-700 text-slate-900 dark:text-white border-gray-500"
                   />
                 </div>
 
@@ -593,7 +593,7 @@ export default function ClientsPage() {
                   Cancelar
                 </Button>
                 <Button
-                  className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 text-white hover:to-blue-700 transition"
+                  className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 text-slate-900 dark:text-white hover:to-blue-700 transition"
                   onClick={handleSaveDeuda} disabled={isSubmitting}>
                   {isSubmitting ? "Guardando..." : "Guardar"}
                 </Button>
@@ -613,12 +613,12 @@ export default function ClientsPage() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-slate-900">
+        <div className="min-h-screen bg-gradient-to-br from-slate-100 dark:from-black via-slate-50 dark:via-gray-900 to-white dark:to-slate-900">
           <header className="flex h-16 items-center gap-2 border-b border-gray-700 bg-gray-800/50 backdrop-blur-xl px-4">
 
-            <SidebarTrigger className="-ml-1 text-white" />
+            <SidebarTrigger className="-ml-1 text-slate-900 dark:text-white" />
             <div className="flex-1">
-              <h1 className="text-xl font-semibold text-white">Cobranza</h1>
+              <h1 className="text-xl font-semibold text-slate-900 dark:text-white">Cobranza</h1>
             </div>
             <Navbar />
           </header>
@@ -640,10 +640,10 @@ export default function ClientsPage() {
                     <div className="flex flex-col">
                       <label className="text-sm text-gray-300 mb-1">Mes</label>
                       <Select value={mes.toString()} onValueChange={(value) => setMes(Number(value))}>
-                        <SelectTrigger className="bg-gray-700 border-gray-600 text-white w-40">
+                        <SelectTrigger className="bg-gray-700 border-gray-600 text-slate-900 dark:text-white w-40">
                           <SelectValue placeholder="Seleccionar mes" />
                         </SelectTrigger>
-                        <SelectContent className="bg-gray-800 border-gray-700 text-white">
+                        <SelectContent className="bg-gray-800 border-gray-700 text-slate-900 dark:text-white">
                           {meses.map((m) => (
                             <SelectItem key={m.valor} value={m.valor.toString()}>
                               {m.nombre}
@@ -657,10 +657,10 @@ export default function ClientsPage() {
                     <div className="flex flex-col">
                       <label className="text-sm text-gray-300 mb-1">Año</label>
                       <Select value={anio.toString()} onValueChange={(value) => setAnio(Number(value))}>
-                        <SelectTrigger className="bg-gray-700 border-gray-600 text-white w-32">
+                        <SelectTrigger className="bg-gray-700 border-gray-600 text-slate-900 dark:text-white w-32">
                           <SelectValue placeholder="Seleccionar año" />
                         </SelectTrigger>
-                        <SelectContent className="bg-gray-800 border-gray-700 text-white">
+                        <SelectContent className="bg-gray-800 border-gray-700 text-slate-900 dark:text-white">
                           {años.map((a) => (
                             <SelectItem key={a} value={a.toString()}>
                               {a}
@@ -674,7 +674,7 @@ export default function ClientsPage() {
                     <div>
                       <Button
                         onClick={generarDeuda}
-                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                        className="bg-blue-600 hover:bg-blue-700 text-slate-900 dark:text-white"
                       >
                         Generar
                       </Button>
@@ -695,7 +695,7 @@ export default function ClientsPage() {
                     <Button
                       onClick={() => handleDownload("activo")}
                       disabled={loadingActivo}
-                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded flex items-center gap-2"
+                      className="bg-green-600 hover:bg-green-700 text-slate-900 dark:text-white px-4 py-2 rounded flex items-center gap-2"
                     >
                       <Download className="w-4 h-4" />
                       {loadingActivo ? "Generando..." : "Activos con deuda"}
@@ -704,7 +704,7 @@ export default function ClientsPage() {
                     <Button
                       onClick={() => handleDownload("cortado")}
                       disabled={loadingCortado}
-                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded flex items-center gap-2"
+                      className="bg-green-600 hover:bg-green-700 text-slate-900 dark:text-white px-4 py-2 rounded flex items-center gap-2"
                     >
                       <Download className="w-4 h-4" />
                       {loadingCortado ? "Generando..." : "Cortados con deuda"}
@@ -742,9 +742,9 @@ export default function ClientsPage() {
                               <div key={step.key} className="flex items-center">
                                 <div
                                   className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${isActive
-                                    ? "border-blue-600 bg-blue-600 text-white"
+                                    ? "border-blue-600 bg-blue-600 text-slate-900 dark:text-white"
                                     : isCompleted
-                                      ? "border-green-600 bg-green-600 text-white"
+                                      ? "border-green-600 bg-green-600 text-slate-900 dark:text-white"
                                       : "border-gray-400  text-gray-400"
                                     }`}
                                 >
@@ -769,7 +769,7 @@ export default function ClientsPage() {
 
 
                       <Dialog open={anularDialog.open} onOpenChange={(open) => setAnularDialog({ ...anularDialog, open })}>
-                        <DialogContent className="bg-gray-800 border border-gray-600 text-white">
+                        <DialogContent className="bg-gray-800 border border-gray-600 text-slate-900 dark:text-white">
                           <DialogHeader>
                             <DialogTitle>Confirmar Anulación</DialogTitle>
                             <DialogDescription className="text-gray-300">Ingresa el motivo de la anulación</DialogDescription>
@@ -778,12 +778,12 @@ export default function ClientsPage() {
                             placeholder="Motivo de la anulación"
                             value={editDialog.motivo}
                             onChange={(e) => setEditDialog({ ...editDialog, motivo: e.target.value })}
-                            className="bg-gray-700 text-white border-gray-600"
+                            className="bg-gray-700 text-slate-900 dark:text-white border-gray-600"
                           />
                           <DialogFooter className="mt-4">
                             <Button onClick={() => setAnularDialog({ open: false, deudaId: null })} variant="ghost">Cancelar</Button>
                             <Button 
-                          className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 text-white hover:to-blue-700 transition"
+                          className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 text-slate-900 dark:text-white hover:to-blue-700 transition"
                             onClick={confirmarAnulacion}>Confirmar</Button>
                           </DialogFooter>
                         </DialogContent>

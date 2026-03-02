@@ -127,11 +127,11 @@ export default function ClientsPage() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-slate-900">
+        <div className="min-h-screen bg-gradient-to-br from-slate-100 dark:from-black via-slate-50 dark:via-gray-900 to-white dark:to-slate-900">
           <header className="flex h-16 items-center gap-2 border-b border-gray-700 bg-gray-800/50 backdrop-blur-xl px-4">
-            <SidebarTrigger className="text-white" />
+            <SidebarTrigger className="text-slate-900 dark:text-white" />
             <div className="flex-1">
-              <h1 className="text-xl font-semibold text-white">Distribución de la RED</h1>
+              <h1 className="text-xl font-semibold text-slate-900 dark:text-white">Distribución de la RED</h1>
             </div>
             <Navbar />
           </header>
@@ -144,7 +144,7 @@ export default function ClientsPage() {
                 className="bg-gray-800/50 border-gray-700 backdrop-blur-xl hover:shadow-lg hover:scale-105 transition-transform cursor-pointer"
               >
                 <CardHeader>
-                  <CardTitle className="text-white">{n.nombre}</CardTitle>
+                  <CardTitle className="text-slate-900 dark:text-white">{n.nombre}</CardTitle>
                   <CardDescription className="text-gray-400">{n.descripcion}</CardDescription>
                 </CardHeader>
                 <CardContent className="flex justify-between">
@@ -169,7 +169,7 @@ export default function ClientsPage() {
 
           {/* MODAL EDITAR NODO */}
           <Dialog open={!!editNodo} onOpenChange={() => setEditNodo(null)}>
-            <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-xl">
+            <DialogContent className="bg-gray-800 border-gray-700 text-slate-900 dark:text-white max-w-xl">
               <DialogHeader>
                 <DialogTitle>Editar Nodo</DialogTitle>
                 <DialogDescription>Modifica los campos del nodo</DialogDescription>
@@ -224,7 +224,7 @@ export default function ClientsPage() {
 
           {/* MODAL VER CAJAS */}
           <Dialog open={!!showCajas} onOpenChange={() => setShowCajas(null)}>
-            <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-4xl">
+            <DialogContent className="bg-gray-900 border-gray-700 text-slate-900 dark:text-white max-w-4xl">
               <DialogHeader>
                 <DialogTitle>Cajas de {showCajas?.nombre}</DialogTitle>
                 <DialogDescription>Listado de cajas relacionadas</DialogDescription>
@@ -245,7 +245,7 @@ export default function ClientsPage() {
                       .filter((c) => c.id_nodo === showCajas?.id_nodo)
                       .map((c) => (
                         <tr key={c.id_caja} className="border-t border-gray-700">
-                          <td className="px-4 py-2 text-sm text-white">{c.nombre}</td>
+                          <td className="px-4 py-2 text-sm text-slate-900 dark:text-white">{c.nombre}</td>
                           <td className="px-4 py-2 text-sm text-gray-400">{c.descripcion}</td>
                           <td className="px-4 py-2">
                             <Button
@@ -267,7 +267,7 @@ export default function ClientsPage() {
 
           {/* MODAL EDITAR CAJA */}
           <Dialog open={!!editCaja} onOpenChange={() => setEditCaja(null)}>
-            <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-xl">
+            <DialogContent className="bg-gray-800 border-gray-700 text-slate-900 dark:text-white max-w-xl">
               <DialogHeader>
                 <DialogTitle>Editar Caja</DialogTitle>
                 <DialogDescription>Modifica los datos de la caja</DialogDescription>

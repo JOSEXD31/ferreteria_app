@@ -159,11 +159,11 @@ export default function TrackingPage() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-slate-900">
+        <div className="min-h-screen bg-gradient-to-br from-slate-100 dark:from-black via-slate-50 dark:via-gray-900 to-white dark:to-slate-900">
           <header className="flex h-16 shrink-0 items-center gap-2 border-b border-gray-700 bg-gray-800/50 backdrop-blur-xl px-4">
-            <SidebarTrigger className="-ml-1 text-white" />
+            <SidebarTrigger className="-ml-1 text-slate-900 dark:text-white" />
             <div className="flex-1">
-              <h1 className="text-xl font-semibold text-white">Seguimiento de Órdenes</h1>
+              <h1 className="text-xl font-semibold text-slate-900 dark:text-white">Seguimiento de Órdenes</h1>
               <p className="text-sm text-gray-300">Rastrea el progreso de las órdenes de trabajo en tiempo real</p>
             </div>
           </header>
@@ -171,7 +171,7 @@ export default function TrackingPage() {
           <div className="flex-1 space-y-6 p-6">
             <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-xl">
               <CardHeader>
-                <CardTitle className="text-white">Seguimiento en Tiempo Real</CardTitle>
+                <CardTitle className="text-slate-900 dark:text-white">Seguimiento en Tiempo Real</CardTitle>
                 <CardDescription className="text-gray-400">
                   Monitorea el estado y progreso de todas las órdenes de trabajo
                 </CardDescription>
@@ -183,18 +183,18 @@ export default function TrackingPage() {
                     placeholder="Buscar por ID de orden o cliente..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 bg-gray-700/50 border-gray-600 text-white"
+                    className="pl-10 bg-gray-700/50 border-gray-600 text-slate-900 dark:text-white"
                   />
                 </div>
 
                 <div className="grid gap-6 lg:grid-cols-2">
                   {/* Lista de órdenes */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-white">Órdenes Activas</h3>
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Órdenes Activas</h3>
                     {filteredOrders.map((order) => (
                       <Card
                         key={order.orderId}
-                        className={`bg-gray-700/30 border-gray-600 cursor-pointer transition-all hover:bg-slate-700/50 ${
+                        className={`bg-gray-700/30 border-gray-600 cursor-pointer transition-all hover:bg-slate-300/50 dark:bg-slate-700/50 ${
                           selectedOrder === order.orderId ? "ring-2 ring-cyan-500" : ""
                         }`}
                         onClick={() => setSelectedOrder(order.orderId)}
@@ -202,19 +202,19 @@ export default function TrackingPage() {
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between mb-3">
                             <div>
-                              <h4 className="font-semibold text-white">{order.orderId}</h4>
+                              <h4 className="font-semibold text-slate-900 dark:text-white">{order.orderId}</h4>
                               <p className="text-sm text-gray-400">
                                 {order.client} - {order.type}
                               </p>
                             </div>
-                            <Badge className={`${getStatusColor(order.currentStatus)} text-white`}>
+                            <Badge className={`${getStatusColor(order.currentStatus)} text-slate-900 dark:text-white`}>
                               {order.currentStatus}
                             </Badge>
                           </div>
                           <div className="space-y-2">
                             <div className="flex justify-between text-sm">
                               <span className="text-gray-400">Progreso</span>
-                              <span className="text-white">{order.progress}%</span>
+                              <span className="text-slate-900 dark:text-white">{order.progress}%</span>
                             </div>
                             <div className="w-full bg-gray-600 rounded-full h-2">
                               <div
@@ -230,7 +230,7 @@ export default function TrackingPage() {
 
                   {/* Detalles del seguimiento */}
                   <div>
-                    <h3 className="text-lg font-semibold text-white mb-4">Historial de Eventos</h3>
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Historial de Eventos</h3>
                     {selectedOrder ? (
                       <Card className="bg-gray-700/30 border-gray-600">
                         <CardContent className="p-4">
@@ -241,7 +241,7 @@ export default function TrackingPage() {
                             return (
                               <div className="space-y-4">
                                 <div className="border-b border-gray-600 pb-3">
-                                  <h4 className="font-semibold text-white">{order.orderId}</h4>
+                                  <h4 className="font-semibold text-slate-900 dark:text-white">{order.orderId}</h4>
                                   <p className="text-sm text-gray-400">
                                     {order.client} - {order.type}
                                   </p>
@@ -260,7 +260,7 @@ export default function TrackingPage() {
                                       </div>
                                       <div className="flex-1 min-w-0">
                                         <div className="flex items-center justify-between">
-                                          <p className="text-sm font-medium text-white">{event.status}</p>
+                                          <p className="text-sm font-medium text-slate-900 dark:text-white">{event.status}</p>
                                           <p className="text-xs text-gray-400">{event.timestamp}</p>
                                         </div>
                                         <p className="text-sm text-gray-300 mt-1">{event.description}</p>
@@ -301,7 +301,7 @@ export default function TrackingPage() {
             {/* Mapa de ubicaciones en tiempo real */}
             <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-xl">
               <CardHeader>
-                <CardTitle className="text-white">Ubicaciones en Tiempo Real</CardTitle>
+                <CardTitle className="text-slate-900 dark:text-white">Ubicaciones en Tiempo Real</CardTitle>
                 <CardDescription className="text-gray-400">Posición actual de los técnicos en campo</CardDescription>
               </CardHeader>
               <CardContent>
@@ -311,9 +311,9 @@ export default function TrackingPage() {
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center space-x-2">
                           <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                          <span className="text-white font-medium">Carlos López</span>
+                          <span className="text-slate-900 dark:text-white font-medium">Carlos López</span>
                         </div>
-                        <Badge className="bg-blue-500 text-white">En Sitio</Badge>
+                        <Badge className="bg-blue-500 text-slate-900 dark:text-white">En Sitio</Badge>
                       </div>
                       <p className="text-sm text-gray-400 mb-2">OT-2024-001 - Instalación</p>
                       <div className="flex items-center text-xs text-gray-400">
@@ -332,9 +332,9 @@ export default function TrackingPage() {
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center space-x-2">
                           <div className="w-3 h-3 bg-yellow-500 rounded-full animate-pulse"></div>
-                          <span className="text-white font-medium">Ana Martín</span>
+                          <span className="text-slate-900 dark:text-white font-medium">Ana Martín</span>
                         </div>
-                        <Badge className="bg-yellow-500 text-white">En Ruta</Badge>
+                        <Badge className="bg-yellow-500 text-slate-900 dark:text-white">En Ruta</Badge>
                       </div>
                       <p className="text-sm text-gray-400 mb-2">OT-2024-005 - Mantenimiento</p>
                       <div className="flex items-center text-xs text-gray-400">
@@ -353,9 +353,9 @@ export default function TrackingPage() {
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center space-x-2">
                           <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
-                          <span className="text-white font-medium">Luis Torres</span>
+                          <span className="text-slate-900 dark:text-white font-medium">Luis Torres</span>
                         </div>
-                        <Badge className="bg-gray-500 text-white">Disponible</Badge>
+                        <Badge className="bg-gray-500 text-slate-900 dark:text-white">Disponible</Badge>
                       </div>
                       <p className="text-sm text-gray-400 mb-2">Sin asignación activa</p>
                       <div className="flex items-center text-xs text-gray-400">

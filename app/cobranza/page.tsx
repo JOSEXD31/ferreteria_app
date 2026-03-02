@@ -191,12 +191,12 @@ export default function ClientsPage() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-slate-900">
+        <div className="min-h-screen bg-gradient-to-br from-slate-100 dark:from-black via-slate-50 dark:via-gray-900 to-white dark:to-slate-900">
           <header className="flex h-16 items-center gap-2 border-b border-gray-700 bg-gray-800/50 backdrop-blur-xl px-4">
 
-            <SidebarTrigger className="-ml-1 text-white" />
+            <SidebarTrigger className="-ml-1 text-slate-900 dark:text-white" />
             <div className="flex-1">
-              <h1 className="text-xl font-semibold text-white">Cobranza</h1>
+              <h1 className="text-xl font-semibold text-slate-900 dark:text-white">Cobranza</h1>
             </div>
             <Navbar />
 
@@ -215,18 +215,18 @@ export default function ClientsPage() {
                     <>
                       <Card className="bg-gray-800/50 border-gray-700">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                          <CardTitle className="text-sm font-medium text-white">Deudas Activas</CardTitle>
+                          <CardTitle className="text-sm font-medium text-slate-900 dark:text-white">Deudas Activas</CardTitle>
                           <AlertTriangle className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                          <div className="text-2xl font-bold text-white">{deudasActivas.length}</div>
+                          <div className="text-2xl font-bold text-slate-900 dark:text-white">{deudasActivas.length}</div>
                           <p className="text-xs text-gray-400">Estado: ACTIVO / RESTANTE</p>
                         </CardContent>
                       </Card>
 
                       <Card className="bg-gray-800/50 border-gray-700">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                          <CardTitle className="text-sm font-medium text-white">Deudas Anuladas</CardTitle>
+                          <CardTitle className="text-sm font-medium text-slate-900 dark:text-white">Deudas Anuladas</CardTitle>
                           <CopyX className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
@@ -237,7 +237,7 @@ export default function ClientsPage() {
 
                       <Card className="bg-gray-800/50 border-gray-700">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                          <CardTitle className="text-sm font-medium text-white">Total por Cobrar</CardTitle>
+                          <CardTitle className="text-sm font-medium text-slate-900 dark:text-white">Total por Cobrar</CardTitle>
                           <CreditCard className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
@@ -251,7 +251,7 @@ export default function ClientsPage() {
                   {/* Esto va para ambos */}
                   <Card className="bg-gray-800/50 border-gray-700">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium text-white">Ingresos Hoy</CardTitle>
+                      <CardTitle className="text-sm font-medium text-slate-900 dark:text-white">Ingresos Hoy</CardTitle>
                       <TrendingUp className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
@@ -270,7 +270,7 @@ export default function ClientsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                   <Card className="bg-gray-800/50 border-gray-700">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium text-white">Ingreso Previsto</CardTitle>
+                      <CardTitle className="text-sm font-medium text-slate-900 dark:text-white">Ingreso Previsto</CardTitle>
                     </CardHeader>
                     {ingresoPrevisto.map((item, i) => {
                       const prev = ingresoPrevisto[i - 1];
@@ -298,7 +298,7 @@ export default function ClientsPage() {
                   </Card>
                   <Card className="bg-gray-800/50 border-gray-700">
                     <CardHeader>
-                      <CardTitle className="flex items-center text-white">
+                      <CardTitle className="flex items-center text-slate-900 dark:text-white">
                         <Search className="h-5 w-5 mr-2" />
                         Procesar Pago
                       </CardTitle>
@@ -308,13 +308,13 @@ export default function ClientsPage() {
                     </CardHeader>
                     <CardContent>
                       <Link href="/cobranza/pagos">
-                        <Button className="w-full bg-white text-black hover:bg-gray-600 hover:text-white">Ir a pagos</Button>
+                        <Button className="w-full bg-white text-black hover:bg-gray-600 hover:text-slate-900 dark:text-white">Ir a pagos</Button>
                       </Link>
                     </CardContent>
                   </Card>
                   <Card className="col-span-1 md:col-span-2 bg-gray-800/50 border-gray-700">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-white text-sm">Ingresos por Medio de Pago (Hoy)</CardTitle>
+                      <CardTitle className="text-slate-900 dark:text-white text-sm">Ingresos por Medio de Pago (Hoy)</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <ResponsiveContainer width="100%" height={250}>

@@ -69,24 +69,24 @@ export default function DashboardPage() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-slate-900">
-          <header className="flex h-16 shrink-0 items-center gap-2 border-b border-slate-700 bg-slate-800/50 backdrop-blur-xl px-4">
-            <SidebarTrigger className="-ml-1 text-white" />
+        <div className="min-h-screen bg-gradient-to-br from-slate-100 dark:from-black via-slate-50 dark:via-gray-900 to-white dark:to-slate-900">
+          <header className="flex h-16 shrink-0 items-center gap-2 border-b border-slate-300 dark:border-slate-700 bg-slate-200/50 dark:bg-slate-800/50 backdrop-blur-xl px-4">
+            <SidebarTrigger className="-ml-1 text-slate-900 dark:text-white" />
             <div className="flex-1">
-              <h1 className="text-xl font-semibold text-white">Ferretería - Dashboard</h1>
-              <p className="text-sm text-slate-300">Bienvenido, {username} (Rol: {userRole})</p>
+              <h1 className="text-xl font-semibold text-slate-900 dark:text-white">Ferretería - Dashboard</h1>
+              <p className="text-sm text-slate-700 dark:text-slate-300">Bienvenido, {username} (Rol: {userRole})</p>
             </div>
           </header>
           
           <div className="flex-1 space-y-6 p-4 sm:p-6">
             {/* Estadísticas rápidas hardware store */}
             <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
-              <Card className="bg-slate-800/40 border-slate-700 backdrop-blur-md">
+              <Card className="bg-slate-200/40 dark:bg-slate-800/40 border-slate-300 dark:border-slate-700 backdrop-blur-md">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-slate-400 uppercase tracking-wider">Ventas Hoy</p>
-                      <p className="text-2xl font-bold text-white">S/ {metrics.ventasHoy.toFixed(2)}</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-400 uppercase tracking-wider">Ventas Hoy</p>
+                      <p className="text-2xl font-bold text-slate-900 dark:text-white">S/ {metrics.ventasHoy.toFixed(2)}</p>
                     </div>
                     <div className="p-2 bg-green-500/20 rounded-lg">
                       <TrendingUp className="w-6 h-6 text-green-400" />
@@ -95,12 +95,12 @@ export default function DashboardPage() {
                 </CardContent>
               </Card>
 
-              <Card className="bg-slate-800/40 border-slate-700 backdrop-blur-md">
+              <Card className="bg-slate-200/40 dark:bg-slate-800/40 border-slate-300 dark:border-slate-700 backdrop-blur-md">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-slate-400 uppercase tracking-wider">Stock Bajo</p>
-                      <p className="text-2xl font-bold text-white">{metrics.stockBajo} Artíc.</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-400 uppercase tracking-wider">Stock Bajo</p>
+                      <p className="text-2xl font-bold text-slate-900 dark:text-white">{metrics.stockBajo} Artíc.</p>
                     </div>
                     <div className="p-2 bg-red-500/20 rounded-lg">
                       <AlertTriangle className="w-6 h-6 text-red-400" />
@@ -109,12 +109,12 @@ export default function DashboardPage() {
                 </CardContent>
               </Card>
 
-              <Card className="bg-slate-800/40 border-slate-700 backdrop-blur-md">
+              <Card className="bg-slate-200/40 dark:bg-slate-800/40 border-slate-300 dark:border-slate-700 backdrop-blur-md">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-slate-400 uppercase tracking-wider">Servicios / Trabajos</p>
-                      <p className="text-2xl font-bold text-white">{metrics.trabajosPendientes}</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-400 uppercase tracking-wider">Servicios / Trabajos</p>
+                      <p className="text-2xl font-bold text-slate-900 dark:text-white">{metrics.trabajosPendientes}</p>
                     </div>
                     <div className="p-2 bg-blue-500/20 rounded-lg">
                       <Wrench className="w-6 h-6 text-blue-400" />
@@ -123,12 +123,12 @@ export default function DashboardPage() {
                 </CardContent>
               </Card>
 
-              <Card className="bg-slate-800/40 border-slate-700 backdrop-blur-md">
+              <Card className="bg-slate-200/40 dark:bg-slate-800/40 border-slate-300 dark:border-slate-700 backdrop-blur-md">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-slate-400 uppercase tracking-wider">Clientes</p>
-                      <p className="text-2xl font-bold text-white">{metrics.totalClientes}</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-400 uppercase tracking-wider">Clientes</p>
+                      <p className="text-2xl font-bold text-slate-900 dark:text-white">{metrics.totalClientes}</p>
                     </div>
                     <div className="p-2 bg-purple-500/20 rounded-lg">
                       <Users className="w-6 h-6 text-purple-400" />
@@ -140,9 +140,9 @@ export default function DashboardPage() {
 
             <div className="grid gap-6 lg:grid-cols-2">
               {/* Gráfico de Ventas por Categoría */}
-              <Card className="bg-slate-800/40 border-slate-700 backdrop-blur-md">
+              <Card className="bg-slate-200/40 dark:bg-slate-800/40 border-slate-300 dark:border-slate-700 backdrop-blur-md">
                 <CardHeader>
-                  <CardTitle className="text-white">Ventas por Categoría</CardTitle>
+                  <CardTitle className="text-slate-900 dark:text-white">Ventas por Categoría</CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-col items-center">
                   <ResponsiveContainer width="100%" height={250}>
@@ -168,9 +168,9 @@ export default function DashboardPage() {
               </Card>
 
               {/* Gráfico de Tendencia de Ingresos */}
-              <Card className="bg-slate-800/40 border-slate-700 backdrop-blur-md">
+              <Card className="bg-slate-200/40 dark:bg-slate-800/40 border-slate-300 dark:border-slate-700 backdrop-blur-md">
                 <CardHeader>
-                  <CardTitle className="text-white">Ingresos Semanales</CardTitle>
+                  <CardTitle className="text-slate-900 dark:text-white">Ingresos Semanales</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={250}>
@@ -189,19 +189,19 @@ export default function DashboardPage() {
             </div>
 
             {/* Alertas de Inventario */}
-            <Card className="bg-slate-800/40 border-slate-700 backdrop-blur-md">
+            <Card className="bg-slate-200/40 dark:bg-slate-800/40 border-slate-300 dark:border-slate-700 backdrop-blur-md">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
+                <CardTitle className="text-slate-900 dark:text-white flex items-center gap-2">
                   <Package className="w-5 h-5" /> Revisión de Stock Crítico
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
                   {stockTop.map((item, i) => (
-                    <div key={i} className="flex flex-col p-3 rounded-lg bg-slate-900/50 border border-slate-700">
-                      <span className="text-slate-300 font-medium truncate">{item.name}</span>
+                    <div key={i} className="flex flex-col p-3 rounded-lg bg-slate-100/50 dark:bg-slate-900/50 border border-slate-300 dark:border-slate-700">
+                      <span className="text-slate-700 dark:text-slate-300 font-medium truncate">{item.name}</span>
                       <div className="flex items-center justify-between mt-2">
-                        <span className="text-xs text-slate-500">Stock Actual</span>
+                        <span className="text-xs text-slate-400 dark:text-slate-500">Stock Actual</span>
                         <Badge variant={item.stock < 5 ? "destructive" : "secondary"}>
                           {item.stock} unidades
                         </Badge>

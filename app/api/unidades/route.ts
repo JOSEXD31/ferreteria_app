@@ -35,3 +35,50 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Error al crear unidad de medida" }, { status: 500 })
   }
 }
+
+export async function PUT(request: Request) {
+  try {
+    const body = await request.json()
+    const { id_unidad, nombre, abreviatura } = body
+
+    if (!id_unidad || !nombre || !abreviatura) {
+      return NextResponse.json({ message: "ID, nombre y abreviatura son obligatorios" }, { status: 400 })
+    }
+
+    const unidadActualizada = await prisma.unidad_medida.update({
+      where: { id_unidad: parseInt(id_unidad) },
+      data: {
+        nombre,
+        abreviatura,
+      },
+    })
+
+    return NextResponse.json(unidadActualizada, { status: 200 })
+  } catch (error) {
+    console.error("Error updating unit:", error)
+    return NextResponse.json({ message: "Error al actualizar unidad de medida" }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+
+    if (!id) {
+      return NextResponse.json({ message: "ID de unidad es obligatorio" }, { status: 400 })
+    }
+
+    await prisma.unidad_medida.delete({
+      where: { id_unidad: parseInt(id) },
+    })
+
+    return NextResponse.json({ message: "Unidad eliminada correctamente" }, { status: 200 })
+  } catch (error: any) {
+    console.error("Error deleting unit:", error)
+    if (error.code === 'P2003') {
+      return NextResponse.json({ message: "No se puede eliminar la unidad porque está en uso por productos" }, { status: 400 })
+    }
+    return NextResponse.json({ message: "Error al eliminar unidad de medida" }, { status: 500 })
+  }
+}

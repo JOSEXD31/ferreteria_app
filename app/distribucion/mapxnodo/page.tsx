@@ -152,11 +152,11 @@ export default function ClientsPage() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-slate-900">
+        <div className="min-h-screen bg-gradient-to-br from-slate-100 dark:from-black via-slate-50 dark:via-gray-900 to-white dark:to-slate-900">
           <header className="flex h-16 shrink-0 items-center gap-2 border-b border-gray-700 bg-gray-800/50 backdrop-blur-xl px-4">
-            <SidebarTrigger className="-ml-1 text-white" />
+            <SidebarTrigger className="-ml-1 text-slate-900 dark:text-white" />
             <div className="flex-1">
-              <h1 className="text-xl font-semibold text-white">Distribución de la RED</h1>
+              <h1 className="text-xl font-semibold text-slate-900 dark:text-white">Distribución de la RED</h1>
             </div>
             <Navbar />
           </header>
@@ -169,7 +169,7 @@ export default function ClientsPage() {
               <CardHeader>
                 <div className="flex flex-wrap gap-4">
                   {nodos.map((nodo) => (
-                    <label key={nodo.id_nodo} className="flex items-center gap-2 text-white">
+                    <label key={nodo.id_nodo} className="flex items-center gap-2 text-slate-900 dark:text-white">
                       <input
                         type="checkbox"
                         checked={selectedNodos.includes(nodo.id_nodo)}

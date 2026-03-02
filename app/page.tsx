@@ -63,15 +63,15 @@ export default function LoginPage() {
           className="w-full h-full object-cover"
         />
         {/* Capa oscura encima de la imagen */}
-        <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900/80 to-slate-900/80" />
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-100 dark:from-black via-slate-50 dark:via-gray-900/80 to-white dark:to-slate-900/80" />
       </div>
 
       {/* Contenido principal */}
       <div className="relative z-10 flex flex-col lg:flex-row items-center justify-center h-full p-6">
 
         {/* Columna izquierda (Bienvenido y logo) */}
-        <div className="hidden lg:flex flex-col items-center justify-center w-1/2 space-y-6 text-white">
-          <h1 className="text-5xl text-opacity-80 text-white font-bold fade-down">¡Bienvenido!</h1>
+        <div className="hidden lg:flex flex-col items-center justify-center w-1/2 space-y-6 text-slate-900 dark:text-white">
+          <h1 className="text-5xl text-opacity-80 text-slate-900 dark:text-white font-bold fade-down">¡Bienvenido!</h1>
           <img
             src="/tufibra_logo.webp"
             alt="Logo Tufibra"
@@ -79,9 +79,9 @@ export default function LoginPage() {
           />
         </div>
         {/* Columna/formulario (responsivo centrado) */}
-        <Card className="w-full max-w-md bg-slate-800/60 border border-slate-700 rounded-2xl shadow-xl backdrop-blur-md px-6 py-8 space-y-6">
+        <Card className="w-full max-w-md bg-slate-200/60 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-2xl shadow-xl backdrop-blur-md px-6 py-8 space-y-6">
           <div className="text-center space-y-2 lg:hidden">
-            <h1 className="text-3xl font-bold text-white text-opacity-80 fade-down">¡Bienvenido!</h1>
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white text-opacity-80 fade-down">¡Bienvenido!</h1>
             <img
               src="/tufibra_logo.webp"
               alt="Logo Tufibra"
@@ -89,13 +89,13 @@ export default function LoginPage() {
             />
           </div>
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-white text-opacity-80">Inicio de Sesión</h2>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white text-opacity-80">Inicio de Sesión</h2>
           </div>
 
           <div className="space-y-4">
             {/* Usuario */}
             <div className="space-y-2">
-              <Label htmlFor="username" className="text-slate-300 font-medium">
+              <Label htmlFor="username" className="text-slate-700 dark:text-slate-300 font-medium">
                 Usuario
               </Label>
               <Input
@@ -104,13 +104,13 @@ export default function LoginPage() {
                 placeholder="Ingrese su usuario"
                 value={credentials.username}
                 onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
-                className="bg-slate-700/60 border border-slate-600 text-white placeholder:text-slate-400 focus:ring-cyan-500"
+                className="bg-slate-300/60 dark:bg-slate-700/60 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white placeholder:text-slate-400 dark:text-slate-500 dark:text-slate-400 focus:ring-cyan-500"
               />
             </div>
 
             {/* Contraseña */}
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-slate-300 font-medium">
+              <Label htmlFor="password" className="text-slate-700 dark:text-slate-300 font-medium">
                 Contraseña
               </Label>
               <div className="relative">
@@ -120,13 +120,13 @@ export default function LoginPage() {
                   placeholder="Ingrese su contraseña"
                   value={credentials.password}
                   onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
-                  className="bg-slate-700/60 border border-slate-600 text-white placeholder:text-slate-400 pr-10 focus:ring-cyan-500"
+                  className="bg-slate-300/60 dark:bg-slate-700/60 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white placeholder:text-slate-400 dark:text-slate-500 dark:text-slate-400 pr-10 focus:ring-cyan-500"
                 />
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="absolute right-0 top-0 h-full px-3 text-slate-400 hover:text-white"
+                  className="absolute right-0 top-0 h-full px-3 text-slate-400 dark:text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -136,17 +136,17 @@ export default function LoginPage() {
 
             {/* Rol */}
             <div className="space-y-2">
-              <Label htmlFor="role" className="text-slate-300 font-medium">
+              <Label htmlFor="role" className="text-slate-700 dark:text-slate-300 font-medium">
                 Rol
               </Label>
               <Select
                 value={credentials.role}
                 onValueChange={(value) => setCredentials({ ...credentials, role: value })}
               >
-                <SelectTrigger className="bg-slate-700/60 border border-slate-600 text-white focus:ring-cyan-500">
+                <SelectTrigger className="bg-slate-300/60 dark:bg-slate-700/60 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:ring-cyan-500">
                   <SelectValue placeholder="Seleccione su rol" />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700 text-white">
+                <SelectContent className="bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white">
                   <SelectItem value="admin">Administrador</SelectItem>
                   <SelectItem value="vendedor">Vendedor / Oficina</SelectItem>
                   <SelectItem value="almacen">Almacén</SelectItem>
@@ -157,7 +157,7 @@ export default function LoginPage() {
 
             {/* Error */}
             {errorMessage && (
-              <div className="bg-red-600/80 text-white text-sm px-4 py-2 rounded-md animate-pulse justify-center items-center text-center">
+              <div className="bg-red-600/80 text-slate-900 dark:text-white text-sm px-4 py-2 rounded-md animate-pulse justify-center items-center text-center">
                 {errorMessage}
               </div>
             )}
@@ -165,12 +165,12 @@ export default function LoginPage() {
             {/* Botón */}
             <Button
               onClick={handleLogin}
-              className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold rounded-lg transition-all duration-300 flex items-center justify-center"
+              className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-slate-900 dark:text-white font-bold rounded-lg transition-all duration-300 flex items-center justify-center"
               disabled={isLoading || !credentials.username || !credentials.password || !credentials.role}
             >
               {isLoading && (
                 <svg
-                  className="animate-spin h-5 w-5 mr-2 text-white"
+                  className="animate-spin h-5 w-5 mr-2 text-slate-900 dark:text-white"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"

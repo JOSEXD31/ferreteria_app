@@ -126,11 +126,11 @@ export default function ServiciosPage() {
         <SidebarProvider>
             <AppSidebar />
             <SidebarInset>
-                <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-slate-900">
+                <div className="min-h-screen bg-gradient-to-br from-slate-100 dark:from-black via-slate-50 dark:via-gray-900 to-white dark:to-slate-900">
                     <header className="flex h-16 items-center gap-2 border-b border-gray-700 bg-gray-800/50 backdrop-blur-xl px-4">
-                        <SidebarTrigger className="-ml-1 text-white" />
+                        <SidebarTrigger className="-ml-1 text-slate-900 dark:text-white" />
                         <div className="flex-1">
-                            <h1 className="text-xl font-semibold text-white">Gestión de Servicios</h1>
+                            <h1 className="text-xl font-semibold text-slate-900 dark:text-white">Gestión de Servicios</h1>
                         </div>
                         <Navbar />
                     </header>
@@ -140,7 +140,7 @@ export default function ServiciosPage() {
                             <CardHeader>
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <CardTitle className="text-white flex items-center gap-2">
+                                        <CardTitle className="text-slate-900 dark:text-white flex items-center gap-2">
                                             <ListChecks className="h-6 w-6" />
                                             Servicios y Planes
                                         </CardTitle>
@@ -154,12 +154,12 @@ export default function ServiciosPage() {
                                         if (!open) resetForm()
                                     }}>
                                         <DialogTrigger asChild>
-                                            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                                            <Button className="bg-blue-600 hover:bg-blue-700 text-slate-900 dark:text-white">
                                                 <Plus className="w-4 h-4 mr-2" />
                                                 Nuevo Servicio
                                             </Button>
                                         </DialogTrigger>
-                                        <DialogContent className="bg-gray-800 border-gray-700 text-white">
+                                        <DialogContent className="bg-gray-800 border-gray-700 text-slate-900 dark:text-white">
                                             <DialogHeader>
                                                 <DialogTitle>{editingService ? "Editar Servicio" : "Nuevo Servicio"}</DialogTitle>
                                                 <DialogDescription className="text-gray-400">
@@ -174,7 +174,7 @@ export default function ServiciosPage() {
                                                         id="nombre"
                                                         value={formData.serv_nombre}
                                                         onChange={(e) => setFormData({ ...formData, serv_nombre: e.target.value })}
-                                                        className="bg-gray-700 border-gray-600 text-white"
+                                                        className="bg-gray-700 border-gray-600 text-slate-900 dark:text-white"
                                                         placeholder="Ej. Plan Fibra 100MB"
                                                     />
                                                 </div>
@@ -186,7 +186,7 @@ export default function ServiciosPage() {
                                                         step="0.01"
                                                         value={formData.serv_precio}
                                                         onChange={(e) => setFormData({ ...formData, serv_precio: e.target.value })}
-                                                        className="bg-gray-700 border-gray-600 text-white"
+                                                        className="bg-gray-700 border-gray-600 text-slate-900 dark:text-white"
                                                         placeholder="0.00"
                                                     />
                                                 </div>
@@ -196,13 +196,13 @@ export default function ServiciosPage() {
                                                 <Button
                                                     variant="ghost"
                                                     onClick={() => setIsModalOpen(false)}
-                                                    className="hover:bg-gray-700 hover:text-white"
+                                                    className="hover:bg-gray-700 hover:text-slate-900 dark:text-white"
                                                 >
                                                     Cancelar
                                                 </Button>
                                                 <Button
                                                     onClick={handleSubmit}
-                                                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                                                    className="bg-blue-600 hover:bg-blue-700 text-slate-900 dark:text-white"
                                                 >
                                                     Guardar
                                                 </Button>
@@ -219,7 +219,7 @@ export default function ServiciosPage() {
                                             placeholder="Buscar servicios..."
                                             value={searchTerm}
                                             onChange={(e) => setSearchTerm(e.target.value)}
-                                            className="pl-10 bg-gray-700/50 border-gray-600 text-white max-w-sm"
+                                            className="pl-10 bg-gray-700/50 border-gray-600 text-slate-900 dark:text-white max-w-sm"
                                         />
                                     </div>
                                 </div>

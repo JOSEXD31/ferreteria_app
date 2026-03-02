@@ -131,11 +131,11 @@ export default function cajeroPage() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-slate-900">
+        <div className="min-h-screen bg-gradient-to-br from-slate-100 dark:from-black via-slate-50 dark:via-gray-900 to-white dark:to-slate-900">
           <header className="flex h-16 shrink-0 items-center gap-2 border-b border-gray-700 bg-gray-800/50 backdrop-blur-xl px-4">
-            <SidebarTrigger className="-ml-1 text-white" />
+            <SidebarTrigger className="-ml-1 text-slate-900 dark:text-white" />
             <div className="flex-1">
-              <h1 className="text-xl font-semibold text-white">Gestión de Personal de Oficina</h1>
+              <h1 className="text-xl font-semibold text-slate-900 dark:text-white">Gestión de Personal de Oficina</h1>
               <p className="text-sm text-gray-300">Administra el equipo de cajeros</p>
             </div>
           </header>
@@ -146,7 +146,7 @@ export default function cajeroPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-white">Personales de Oficina</CardTitle>
+                    <CardTitle className="text-slate-900 dark:text-white">Personales de Oficina</CardTitle>
                     <CardDescription className="text-gray-400">
                       Gestiona la información y estado de los cajeros
                     </CardDescription>
@@ -158,7 +158,7 @@ export default function cajeroPage() {
                         Nuevo Cajero
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-2xl">
+                    <DialogContent className="bg-gray-800 border-gray-700 text-slate-900 dark:text-white max-w-2xl">
                       <DialogHeader>
                         <DialogTitle>Agregar Nuevo Personal de oficina</DialogTitle>
                         <DialogDescription className="text-gray-400">
@@ -212,12 +212,12 @@ export default function cajeroPage() {
                         </div>
                       </div>
                       <div className="flex justify-end space-x-2 text-black">
-                        <Button variant="outline" onClick={() => setIsCreateModalOpen(false)} className="hover:bg-gray-600 hover:text-white transition">
+                        <Button variant="outline" onClick={() => setIsCreateModalOpen(false)} className="hover:bg-gray-600 hover:text-slate-900 dark:text-white transition">
                           Cancelar
                         </Button>
                         <Button
                           onClick={handleCreateCajero}
-                          className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 text-white hover:to-blue-700 transition"
+                          className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 text-slate-900 dark:text-white hover:to-blue-700 transition"
                         >
                           Crear Cajero
                         </Button>
@@ -242,10 +242,10 @@ export default function cajeroPage() {
                         <TableRow key={Cajero.id} className="border-gray-700">
                           <TableCell>
                             <div className="flex items-center space-x-3">
-                              <User className="w-4 h-4 text-white" />
+                              <User className="w-4 h-4 text-slate-900 dark:text-white" />
 
                               <div>
-                                <p className="text-white font-medium">{Cajero.name}</p>
+                                <p className="text-slate-900 dark:text-white font-medium">{Cajero.name}</p>
                                 <p className="text-xs text-gray-400">{Cajero.id}</p>
                               </div>
                             </div>
@@ -263,7 +263,7 @@ export default function cajeroPage() {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <Badge className={`${getStatusColor(Cajero.status)} text-white`}>
+                            <Badge className={`${getStatusColor(Cajero.status)} text-slate-900 dark:text-white`}>
                               {Cajero.status}
                             </Badge>
                           </TableCell>
@@ -276,7 +276,7 @@ export default function cajeroPage() {
                                   setSelectedCajero(Cajero)
                                   setIsViewModalOpen(true)
                                 }}
-                                className="text-gray-400 hover:text-white"
+                                className="text-gray-400 hover:text-slate-900 dark:text-white"
                               >
                                 <Eye className="w-4 h-4" />
                               </Button>
@@ -287,7 +287,7 @@ export default function cajeroPage() {
                                   setSelectedCajero(Cajero)
                                   setIsEditModalOpen(true)
                                 }}
-                                className="text-gray-400 hover:text-white"
+                                className="text-gray-400 hover:text-slate-900 dark:text-white"
                               >
                                 <Edit className="w-4 h-4" />
                               </Button>
@@ -306,7 +306,7 @@ export default function cajeroPage() {
 
         {/* Modal de visualización */}
         <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
-          <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-2xl">
+          <DialogContent className="bg-gray-800 border-gray-700 text-slate-900 dark:text-white max-w-2xl">
             <DialogHeader>
               <DialogTitle>Perfil del Personal de Oficina</DialogTitle>
               <DialogDescription className="text-gray-400">Información detallada del cajero</DialogDescription>
@@ -315,9 +315,9 @@ export default function cajeroPage() {
               <div className="space-y-6">
                 <div className="flex items-center space-x-4">
                   <div>
-                    <h3 className="text-xl font-semibold text-white">{selectedCajero.name}</h3>
+                    <h3 className="text-xl font-semibold text-slate-900 dark:text-white">{selectedCajero.name}</h3>
                     <p className="text-gray-400">{selectedCajero.id}</p>
-                    <Badge className={`${getStatusColor(selectedCajero.status)} text-white mt-1`}>
+                    <Badge className={`${getStatusColor(selectedCajero.status)} text-slate-900 dark:text-white mt-1`}>
                       {selectedCajero.status}
                     </Badge>
                   </div>
@@ -328,11 +328,11 @@ export default function cajeroPage() {
                     <div>
                       <Label className="text-gray-400">Contacto</Label>
                       <div className="space-y-2 mt-1">
-                        <div className="flex items-center text-white">
+                        <div className="flex items-center text-slate-900 dark:text-white">
                           <Mail className="w-4 h-4 mr-2 text-gray-400" />
                           {selectedCajero.email}
                         </div>
-                        <div className="flex items-center text-white">
+                        <div className="flex items-center text-slate-900 dark:text-white">
                           <Phone className="w-4 h-4 mr-2 text-gray-400" />
                           {selectedCajero.phone}
                         </div>
@@ -343,7 +343,7 @@ export default function cajeroPage() {
                   <div className="space-y-4">
                     <div>
                       <Label className="text-gray-400">Fecha de Registro</Label>
-                      <div className="flex items-center text-white mt-1">
+                      <div className="flex items-center text-slate-900 dark:text-white mt-1">
                         <Calendar className="w-4 h-4 mr-2 text-gray-400" />
                         {selectedCajero.joinDate}
                       </div>
@@ -357,7 +357,7 @@ export default function cajeroPage() {
 
         {/* Modal de edición */}
         <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-          <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-2xl">
+          <DialogContent className="bg-gray-800 border-gray-700 text-slate-900 dark:text-white max-w-2xl">
             <DialogHeader>
               <DialogTitle>Editar Técnico</DialogTitle>
               <DialogDescription className="text-gray-400">Modifica la información del técnico</DialogDescription>
