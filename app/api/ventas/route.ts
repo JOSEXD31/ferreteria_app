@@ -25,7 +25,19 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { id_cliente, id_usuario, tipo, subtotal, igv, total, detalles } = body
+    const {
+      id_cliente,
+      id_usuario,
+      tipo,
+      subtotal,
+      igv,
+      total,
+      detalles,
+      metodo_pago,
+      tipo_comprobante,
+      monto_efectivo,
+      monto_transferencia
+    } = body
 
     if (!detalles || detalles.length === 0) {
       return NextResponse.json({ message: "La venta debe tener al menos un producto" }, { status: 400 })
@@ -42,6 +54,10 @@ export async function POST(request: Request) {
           igv: igv ? parseFloat(igv) : 0,
           total: total ? parseFloat(total) : 0,
           estado: "pagado",
+          metodo_pago: metodo_pago ? metodo_pago.toLowerCase() : "efectivo",
+          tipo_comprobante: tipo_comprobante ? tipo_comprobante.toLowerCase() : "ticket",
+          monto_efectivo: monto_efectivo ? parseFloat(monto_efectivo) : (metodo_pago === 'Efectivo' ? parseFloat(total) : 0),
+          monto_transferencia: monto_transferencia ? parseFloat(monto_transferencia) : (metodo_pago === 'Transferencia' ? parseFloat(total) : 0),
           detalles: {
             create: detalles.map((d: any) => ({
               id_producto: d.id_producto ? parseInt(d.id_producto) : null,
@@ -53,7 +69,13 @@ export async function POST(request: Request) {
           }
         },
         include: {
-          detalles: true
+          detalles: {
+            include: {
+              producto: true
+            }
+          },
+          cliente: true,
+          usuario: true
         }
       })
 

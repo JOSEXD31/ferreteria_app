@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label"
 import { Plus, Search, Edit, Trash2, Tags, Layers } from "lucide-react"
 import { toast } from 'react-toastify'
 import { Textarea } from "@/components/ui/textarea"
+import { InventoryHeader } from "@/components/inventory-header"
 
 interface Categoria {
     id_categoria: number
@@ -115,17 +116,10 @@ export default function CategoriasPage() {
         <SidebarProvider>
             <AppSidebar />
             <SidebarInset>
-                <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white">
-                    <header className="h-16 border-b border-slate-200 dark:border-slate-800 flex items-center px-6 justify-between bg-slate-100/50 dark:bg-slate-900/50 backdrop-blur-xl">
-                        <div className="flex items-center gap-4">
-                            <SidebarTrigger />
-                            <h1 className="text-xl font-bold flex items-center gap-2">
-                                <Layers className="text-amber-400" /> Categorías de Productos
-                            </h1>
-                        </div>
-                    </header>
+                <div className="min-h-screen bg-white dark:bg-slate-900 text-slate-900 dark:text-white flex flex-col">
+                    <InventoryHeader />
 
-                    <div className="p-6">
+                    <div className="p-6 flex-1">
                         <div className="max-w-6xl mx-auto space-y-6">
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                 <Card className="bg-amber-600/10 border-amber-500/20 w-full md:w-auto flex-1">

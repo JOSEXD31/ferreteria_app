@@ -1,6 +1,6 @@
 "use client"
-
 import { useState, useEffect } from "react"
+import Link from "next/link"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -16,10 +16,11 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
-import { Plus, Search, Edit, Trash2, Package, AlertTriangle } from "lucide-react"
+import { Plus, Search, Edit, Trash2, Package, AlertTriangle, Truck, Tags, Scale } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "react-toastify"
+import { InventoryHeader } from "@/components/inventory-header"
 
 interface Producto {
     id_producto: number
@@ -168,13 +169,10 @@ export default function InventoryPage() {
         <SidebarProvider>
             <AppSidebar />
             <SidebarInset>
-                <div className="min-h-screen bg-gradient-to-br from-slate-100 dark:from-black via-slate-50 dark:via-gray-900 to-white dark:to-slate-900">
-                    <header className="flex h-16 items-center gap-2 border-b border-gray-700 bg-gray-800/50 backdrop-blur-xl px-4 text-slate-900 dark:text-white">
-                        <SidebarTrigger className="-ml-1" />
-                        <h1 className="text-xl font-semibold">Almacén e Inventario</h1>
-                    </header>
+                <div className="min-h-screen bg-white dark:bg-slate-900 text-slate-900 dark:text-white flex flex-col">
+                    <InventoryHeader />
 
-                    <div className="p-6">
+                    <div className="p-6 flex-1">
                         <Card className="bg-slate-200/40 dark:bg-slate-800/40 border-slate-300 dark:border-slate-700 backdrop-blur-md">
                             <CardHeader>
                                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

@@ -15,7 +15,8 @@ import {
   BarChart3,
   Tags,
   Scale,
-  Truck
+  Truck,
+  Settings
 } from "lucide-react"
 
 import {
@@ -82,25 +83,7 @@ export function AppSidebar() {
             url: "/inventory",
             icon: Package,
           },
-          {
-            title: "Mantenimiento / Config",
-            icon: Wrench,
-            url: "#",
-            items: [
-              {
-                title: "Proveedores",
-                url: "/proveedores",
-              },
-              {
-                title: "Categorías",
-                url: "/categorias",
-              },
-              {
-                title: "Unidades",
-                url: "/unidades",
-              }
-            ]
-          },
+
           {
             title: "Ventas",
             url: "/sales",
@@ -130,6 +113,11 @@ export function AppSidebar() {
             title: "Caja",
             url: "/caja",
             icon: DollarSign,
+          },
+          {
+            title: "Configuración",
+            url: "/configuracion",
+            icon: Settings,
           },
           {
             title: "Usuarios",

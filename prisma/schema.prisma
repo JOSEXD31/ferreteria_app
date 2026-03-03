@@ -150,8 +150,12 @@ model venta {
   fecha      DateTime?       @default(now()) @db.DateTime(0)
   subtotal   Decimal?        @db.Decimal(12, 2)
   igv        Decimal?        @db.Decimal(12, 2)
-  total      Decimal?        @db.Decimal(12, 2)
-  estado     EstadoVenta?    @default(pagado)
+  total               Decimal?          @db.Decimal(12, 2)
+  estado              EstadoVenta?      @default(pagado)
+  tipo_comprobante    TipoComprobante?  @default(ticket)
+  metodo_pago         MetodoPago?       @default(efectivo)
+  monto_efectivo      Decimal?          @db.Decimal(12, 2)
+  monto_transferencia Decimal?          @db.Decimal(12, 2)
   detalles   detalle_venta[]
   cliente    cliente?        @relation(fields: [id_cliente], references: [id_cliente], onDelete: NoAction, onUpdate: NoAction, map: "ventas_ibfk_1")
   usuario    usuario?        @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction, map: "ventas_ibfk_2")
@@ -276,6 +280,18 @@ enum EstadoTrabajo {
   terminado
 }
 
+enum MetodoPago {
+  efectivo
+  transferencia
+  mixto
+}
+
+enum TipoComprobante {
+  ticket
+  boleta
+  factura
+}
+
 enum EstadoCotizacion {
   pendiente
   procesada
@@ -314,4 +330,20 @@ model detalle_cotizacion {
   @@index([id_producto])
   @@index([id_cotizacion])
   @@map("detalle_cotizaciones")
+}
+
+model empresa {
+  id_empresa  Int       @id @default(autoincrement())
+  nombre      String    @db.VarChar(150)
+  ruc         String?   @db.VarChar(20)
+  direccion   String?   @db.VarChar(200)
+  telefono    String?   @db.VarChar(20)
+  email       String?   @db.VarChar(100)
+  logo_url    String?   @db.VarChar(255)
+  moneda      String?   @default("PEN") @db.VarChar(10)
+  igv_porcentaje Decimal? @default(18.00) @db.Decimal(5, 2)
+  mensaje_ticket String?  @db.Text
+  fecha_actualizacion DateTime? @default(now()) @updatedAt @db.Timestamp(0)
+
+  @@map("empresa")
 }

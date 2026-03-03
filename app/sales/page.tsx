@@ -17,7 +17,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from "react-toastify"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
-import { Calendar as CalendarIcon, Eye, Filter } from "lucide-react"
+import { Calendar as CalendarIcon, Eye, Filter, Printer } from "lucide-react"
+
 interface Product {
     id_producto: number
     nombre: string
@@ -44,6 +45,7 @@ export default function SalesPage() {
     const [newClientData, setNewClientData] = useState({ dni_ruc: "", nombre: "", telefono: "", direccion: "" })
 
     const [paymentType, setPaymentType] = useState<"Efectivo" | "Transferencia" | "Mixto">("Efectivo")
+    const [tipoComprobante, setTipoComprobante] = useState<"Ticket" | "Boleta" | "Factura">("Ticket")
     const [montoEfectivo, setMontoEfectivo] = useState(0)
     const [montoTransferencia, setMontoTransferencia] = useState(0)
 
@@ -53,6 +55,9 @@ export default function SalesPage() {
     const [activeTab, setActiveTab] = useState("pos")
     const [historyLoading, setHistoryLoading] = useState(false)
     const [date, setDate] = useState<Date | undefined>(new Date())
+
+    const [selectedSaleDetail, setSelectedSaleDetail] = useState<any>(null)
+    const [isSaleDetailOpen, setIsSaleDetailOpen] = useState(false)
 
     useEffect(() => {
         fetchProducts()
@@ -197,32 +202,40 @@ export default function SalesPage() {
 
         try {
             setLoading(true)
+            const payload = {
+                detalles: cart.map(item => ({
+                    id_producto: item.id_producto,
+                    cantidad: item.cantidad,
+                    precio_unitario: item.precio_venta,
+                    subtotal: item.subtotal,
+                    descripcion: item.nombre
+                })),
+                total,
+                igv,
+                subtotal: subtotalGeneral,
+                id_usuario: parseInt(localStorage.getItem("userId") || "0"),
+                id_cliente: selectedClient ? selectedClient.id_cliente : null,
+                tipo: "producto",
+                metodo_pago: paymentType,
+                tipo_comprobante: tipoComprobante,
+                monto_efectivo: montoEfectivo,
+                monto_transferencia: montoTransferencia
+            }
+
             const res = await fetch("/api/ventas", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    detalles: cart.map(item => ({
-                        id_producto: item.id_producto,
-                        cantidad: item.cantidad,
-                        precio_unitario: item.precio_venta,
-                        subtotal: item.subtotal,
-                        descripcion: item.nombre
-                    })),
-                    total,
-                    igv,
-                    subtotal: subtotalGeneral,
-                    id_usuario: parseInt(localStorage.getItem("userId") || "0"),
-                    id_cliente: selectedClient ? selectedClient.id_cliente : null,
-                    tipo: "producto",
-                    metodo_pago: paymentType,
-                    monto_efectivo: montoEfectivo,
-                    monto_transferencia: montoTransferencia
-                })
+                body: JSON.stringify(payload)
             })
 
             if (!res.ok) throw new Error("Error en la venta")
 
+            const ventaConfirmada = await res.json()
             toast.success("Venta realizada con éxito")
+
+            // Print the physical ticket automatically
+            printTicket(ventaConfirmada)
+
             setCart([])
             setSelectedClient(null)
             setClientSearch("")
@@ -360,6 +373,113 @@ export default function SalesPage() {
         printWindow.document.write(html)
         printWindow.document.close()
         setTimeout(() => printWindow.print(), 250)
+    }
+
+    const printTicket = (v: any) => {
+        const printWindow = window.open("", "_blank", "width=400,height=600")
+        if (!printWindow) return
+
+        const docNum = (v.id_venta || 0).toString().padStart(6, '0')
+        const esBoletaFactura = v.tipo_comprobante?.toLowerCase() === 'boleta' || v.tipo_comprobante?.toLowerCase() === 'factura'
+        const headerTitle = v.tipo_comprobante ? v.tipo_comprobante.toUpperCase() : "TICKET DE VENTA"
+
+        const html = `
+            <html>
+            <head>
+                <title>Venta #${docNum}</title>
+                <style>
+                    body { 
+                        font-family: 'Courier New', Courier, monospace; 
+                        margin: 0; 
+                        padding: 10px; 
+                        width: 80mm; 
+                        color: #000;
+                        font-size: 12px;
+                    }
+                    .text-center { text-align: center; }
+                    .text-right { text-align: right; }
+                    .font-bold { font-weight: bold; }
+                    .mb-2 { margin-bottom: 8px; }
+                    .mb-4 { margin-bottom: 16px; }
+                    .mt-4 { margin-top: 16px; }
+                    .border-b { border-bottom: 1px dashed #000; padding-bottom: 4px; margin-bottom: 4px; }
+                    .border-t { border-top: 1px dashed #000; padding-top: 4px; margin-top: 4px; }
+                    
+                    table { width: 100%; border-collapse: collapse; }
+                    th, td { text-align: left; padding: 2px 0; vertical-align: top; }
+                    th { border-bottom: 1px dashed #000; }
+                    
+                    .w-qty { width: 15%; }
+                    .w-desc { width: 55%; }
+                    .w-price { width: 30%; text-align: right; }
+                    
+                    .totals { display: flex; justify-content: space-between; margin-top: 4px; }
+                </style>
+            </head>
+            <body>
+                <div class="text-center mb-4">
+                    <h2 style="margin:0; font-size: 16px;">SISTEMA FERRETERÍA</h2>
+                    <div style="font-size: 10px;">${esBoletaFactura ? 'RUC: 10123456789' : 'Ticket No Fiscal'}</div>
+                    <div style="font-size: 10px;">Av. Principal 123, Ciudad</div>
+                </div>
+                
+                <div class="text-center border-b mb-2 font-bold header-title">
+                    ${headerTitle} N° ${docNum}
+                </div>
+                
+                <div class="mb-4 text-xs">
+                    <div>Fecha: ${new Date(v.fecha || Date.now()).toLocaleString()}</div>
+                    ${v.cliente ? `<div>Cliente: ${v.cliente.nombre}</div>` : '<div>Cliente: Consumidor Final</div>'}
+                    ${v.cliente && v.cliente.dni_ruc ? `<div>DNI/RUC: ${v.cliente.dni_ruc}</div>` : ''}
+                    <div>Cajero: ${v.usuario ? v.usuario.nombre : 'Admin'}</div>
+                </div>
+
+                <table class="mb-2">
+                    <thead>
+                        <tr>
+                            <th class="w-qty">Cant</th>
+                            <th class="w-desc">Producto</th>
+                            <th class="w-price">Importe</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${(v.detalles || []).map((d: any) => `
+                            <tr>
+                                <td class="w-qty">${d.cantidad}</td>
+                                <td class="w-desc">${d.descripcion || (d.producto?.nombre) || ''}</td>
+                                <td class="w-price">${Number(d.subtotal).toFixed(2)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                
+                <div class="border-t mt-4">
+                    <div class="totals text-xs"><span>Op. Gravada:</span> <span>${Number((v.total || 0) / 1.18).toFixed(2)}</span></div>
+                    <div class="totals text-xs"><span>I.G.V. (18%):</span> <span>${Number((v.total || 0) - ((v.total || 0) / 1.18)).toFixed(2)}</span></div>
+                    <div class="totals font-bold mt-2" style="font-size: 14px;"><span>TOTAL S/:</span> <span>${Number(v.total || 0).toFixed(2)}</span></div>
+                </div>
+
+                <div class="border-t mt-2 pt-2 text-xs">
+                    <div class="totals font-bold"><span>METODO DE PAGO:</span> <span style="text-transform: uppercase;">${v.metodo_pago || 'EFECTIVO'}</span></div>
+                    ${v.metodo_pago === 'mixto' ? `
+                        <div class="totals"><span>- Efectivo:</span> <span>${Number(v.monto_efectivo || 0).toFixed(2)}</span></div>
+                        <div class="totals"><span>- Transferencia:</span> <span>${Number(v.monto_transferencia || 0).toFixed(2)}</span></div>
+                    ` : ''}
+                </div>
+
+                <div class="text-center mt-4 text-xs">
+                    <p>*** GRACIAS POR SU COMPRA ***</p>
+                </div>
+            </body>
+            </html>
+        `
+        printWindow.document.write(html)
+        printWindow.document.close()
+
+        // Timeout to allow styles to apply before printing
+        setTimeout(() => {
+            printWindow.print()
+        }, 300)
     }
 
     const filteredProducts = products.filter(p =>
@@ -506,6 +626,33 @@ export default function SalesPage() {
                                                 <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-between items-end">
                                                     <span className="text-lg font-medium">Total a Pagar</span>
                                                     <span className="text-3xl font-bold text-blue-400">S/ {total.toFixed(2)}</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-3">
+                                                <Label className="text-slate-400 dark:text-slate-500 dark:text-slate-400 font-bold">Tipo de Comprobante</Label>
+                                                <div className="grid grid-cols-3 gap-2">
+                                                    <Button
+                                                        variant="outline"
+                                                        onClick={() => setTipoComprobante("Ticket")}
+                                                        className={`border-slate-300 dark:border-slate-700 h-10 ${tipoComprobante === 'Ticket' ? 'border-purple-500 text-purple-600 bg-purple-500/5 dark:text-purple-400' : 'text-slate-500 bg-transparent'}`}
+                                                    >
+                                                        Ticket
+                                                    </Button>
+                                                    <Button
+                                                        variant="outline"
+                                                        onClick={() => setTipoComprobante("Boleta")}
+                                                        className={`border-slate-300 dark:border-slate-700 h-10 ${tipoComprobante === 'Boleta' ? 'border-purple-500 text-purple-600 bg-purple-500/5 dark:text-purple-400' : 'text-slate-500 bg-transparent'}`}
+                                                    >
+                                                        Boleta
+                                                    </Button>
+                                                    <Button
+                                                        variant="outline"
+                                                        onClick={() => setTipoComprobante("Factura")}
+                                                        className={`border-slate-300 dark:border-slate-700 h-10 ${tipoComprobante === 'Factura' ? 'border-purple-500 text-purple-600 bg-purple-500/5 dark:text-purple-400' : 'text-slate-500 bg-transparent'}`}
+                                                    >
+                                                        Factura
+                                                    </Button>
                                                 </div>
                                             </div>
 
@@ -793,7 +940,15 @@ export default function SalesPage() {
                                                                 <Badge variant="outline" className="border-green-500 text-green-500">{v.estado}</Badge>
                                                             </TableCell>
                                                             <TableCell className="text-right">
-                                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 dark:text-slate-500 dark:text-slate-400 hover:text-blue-500">
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-8 w-8 text-slate-400 dark:text-slate-500 dark:text-slate-400 hover:text-blue-500"
+                                                                    onClick={() => {
+                                                                        setSelectedSaleDetail(v)
+                                                                        setIsSaleDetailOpen(true)
+                                                                    }}
+                                                                >
                                                                     <Eye className="h-4 w-4" />
                                                                 </Button>
                                                             </TableCell>
@@ -803,6 +958,106 @@ export default function SalesPage() {
                                             </TableBody>
                                         </Table>
                                     </CardContent>
+
+                                    {/* Modal Detalle Venta */}
+                                    <Dialog open={isSaleDetailOpen} onOpenChange={setIsSaleDetailOpen}>
+                                        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+                                            <DialogHeader className="flex-shrink-0 flex flex-row items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
+                                                <div>
+                                                    <DialogTitle className="text-xl">Detalle de Venta #{selectedSaleDetail?.id_venta}</DialogTitle>
+                                                    <div className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                                                        {selectedSaleDetail?.fecha && new Date(selectedSaleDetail.fecha).toLocaleString()}
+                                                    </div>
+                                                </div>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="gap-2 bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100 dark:bg-blue-900/20 dark:border-blue-800 mr-4"
+                                                    onClick={() => selectedSaleDetail && printTicket(selectedSaleDetail)}
+                                                >
+                                                    <Printer className="h-4 w-4" /> Reimprimir
+                                                </Button>
+                                            </DialogHeader>
+
+                                            <div className="flex-1 overflow-auto py-4 space-y-6">
+                                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                                    <div>
+                                                        <span className="text-slate-500 block mb-1">Cliente</span>
+                                                        <span className="font-medium text-slate-900 dark:text-white">
+                                                            {selectedSaleDetail?.cliente ? selectedSaleDetail.cliente.nombre : 'Consumidor Final'}
+                                                        </span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-slate-500 block mb-1">Documento (RUC/DNI)</span>
+                                                        <span className="font-medium text-slate-900 dark:text-white">
+                                                            {selectedSaleDetail?.cliente?.dni_ruc || '-'}
+                                                        </span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-slate-500 block mb-1">Cajero</span>
+                                                        <span className="font-medium text-slate-900 dark:text-white">
+                                                            {selectedSaleDetail?.usuario?.nombre || 'Admin'}
+                                                        </span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-slate-500 block mb-1">Tipo de Comprobante</span>
+                                                        <Badge variant="outline" className="capitalize border-purple-500 text-purple-600">
+                                                            {selectedSaleDetail?.tipo_comprobante || 'Ticket'}
+                                                        </Badge>
+                                                    </div>
+                                                </div>
+
+                                                <div>
+                                                    <h3 className="font-bold mb-3 border-b border-slate-200 dark:border-slate-800 pb-2">Productos Vendidos</h3>
+                                                    <Table>
+                                                        <TableHeader>
+                                                            <TableRow>
+                                                                <TableHead>Producto</TableHead>
+                                                                <TableHead className="text-center">Cant.</TableHead>
+                                                                <TableHead className="text-right">Precio</TableHead>
+                                                                <TableHead className="text-right">Subtotal</TableHead>
+                                                            </TableRow>
+                                                        </TableHeader>
+                                                        <TableBody>
+                                                            {selectedSaleDetail?.detalles?.map((d: any) => (
+                                                                <TableRow key={d.id_detalle}>
+                                                                    <TableCell>{d.descripcion || d.producto?.nombre}</TableCell>
+                                                                    <TableCell className="text-center">{Number(d.cantidad).toString()}</TableCell>
+                                                                    <TableCell className="text-right">S/ {Number(d.precio_unitario).toFixed(2)}</TableCell>
+                                                                    <TableCell className="text-right font-medium">S/ {Number(d.subtotal).toFixed(2)}</TableCell>
+                                                                </TableRow>
+                                                            ))}
+                                                        </TableBody>
+                                                    </Table>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex-shrink-0 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-lg border border-slate-200 dark:border-slate-800 space-y-2">
+                                                <div className="flex justify-between items-center pb-2 border-b border-slate-200 dark:border-slate-800">
+                                                    <div className="text-sm font-medium">
+                                                        Método de Pago: <span className="uppercase text-blue-600 dark:text-blue-400">{selectedSaleDetail?.metodo_pago || 'EFECTIVO'}</span>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                                                            S/ {Number(selectedSaleDetail?.total || 0).toFixed(2)}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {selectedSaleDetail?.metodo_pago === 'mixto' && (
+                                                    <div className="flex justify-between text-sm text-slate-500 dark:text-slate-400 pt-1">
+                                                        <span>Efectivo: S/ {Number(selectedSaleDetail?.monto_efectivo || 0).toFixed(2)}</span>
+                                                        <span>Transferencia: S/ {Number(selectedSaleDetail?.monto_transferencia || 0).toFixed(2)}</span>
+                                                    </div>
+                                                )}
+                                                <div className="flex justify-between text-xs text-slate-400 pt-1">
+                                                    <span>IGV: S/ {Number(selectedSaleDetail?.igv || 0).toFixed(2)}</span>
+                                                    <span>Gravada: S/ {Number(selectedSaleDetail?.subtotal || 0).toFixed(2)}</span>
+                                                </div>
+                                            </div>
+                                        </DialogContent>
+                                    </Dialog>
+
                                 </Card>
                             </TabsContent>
                         </main>
