@@ -42,11 +42,13 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
+import { useEmpresa } from "@/contexts/empresa-context"
 
 export function AppSidebar() {
   const [userRole, setUserRole] = useState("")
   const [username, setUsername] = useState("")
   const router = useRouter()
+  const { empresa } = useEmpresa()
 
   useEffect(() => {
     setUserRole(localStorage.getItem("userRole") || "")
@@ -99,7 +101,7 @@ export function AppSidebar() {
             url: "/clients",
             icon: Users,
           },
-          {
+          /*{
             title: "Servicios / Trabajos",
             url: "/trabajos",
             icon: Wrench,
@@ -113,11 +115,11 @@ export function AppSidebar() {
             title: "Caja",
             url: "/caja",
             icon: DollarSign,
-          },
+          },*/
           {
-            title: "Configuración",
-            url: "/configuracion",
-            icon: Settings,
+            title: "Reportes",
+            url: "/reportes",
+            icon: BarChart3,
           },
           {
             title: "Usuarios",
@@ -125,9 +127,9 @@ export function AppSidebar() {
             icon: Shield,
           },
           {
-            title: "Reportes",
-            url: "/reportes",
-            icon: BarChart3,
+            title: "Configuración",
+            url: "/configuracion",
+            icon: Settings,
           },
         ]
       case "vendedor":
@@ -147,11 +149,11 @@ export function AppSidebar() {
             url: "/clients",
             icon: Users,
           },
-          {
+          /*{
             title: "Caja",
             url: "/caja",
             icon: DollarSign,
-          },
+          },*/
         ]
       case "almacen":
         return [
@@ -189,14 +191,24 @@ export function AppSidebar() {
   return (
     <Sidebar className="border-r border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 backdrop-blur-xl text-slate-900 dark:text-white [--sidebar-background:theme(colors.white)] dark:[--sidebar-background:theme(colors.gray.800)] [--sidebar-foreground:theme(colors.slate.900)] dark:[--sidebar-foreground:theme(colors.white)] [--sidebar-border:theme(colors.slate.200)] dark:[--sidebar-border:theme(colors.gray.700)]">
       <SidebarHeader className="border-b border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-gray-800/50 p-2">
-        <div className="flex flex-col items-center space-x-3">
-          <Image
-            src="/tufibra_logo.webp"
-            alt="Logo"
-            width={160}
-            height={160}
-            priority
-          />
+        <div className="flex flex-col items-center space-x-3 p-2">
+          {empresa?.logo_url ? (
+            <div className="relative w-48 h-40">
+              <Image
+                src={empresa.logo_url}
+                alt={empresa.nombre}
+                fill
+                className="object-contain"
+                priority
+              />
+            </div>
+          ) : (
+            <div className="flex items-center justify-center p-2 rounded-lg bg-indigo-50 dark:bg-indigo-900/50 border border-indigo-100 dark:border-indigo-800">
+              <span className="font-bold text-lg text-indigo-700 dark:text-indigo-400 text-center tracking-tight leading-tight">
+                {empresa?.nombre || "Ferretería System"}
+              </span>
+            </div>
+          )}
         </div>
       </SidebarHeader>
 

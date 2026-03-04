@@ -6,6 +6,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { ThemeProvider } from "@/components/theme-provider"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { EmpresaProvider } from "@/contexts/empresa-context"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -30,9 +31,11 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <ThemeToggle />
-          {children}
-          <ToastContainer />
+          <EmpresaProvider>
+            <ThemeToggle />
+            {children}
+            <ToastContainer />
+          </EmpresaProvider>
         </ThemeProvider>
       </body>
     </html>

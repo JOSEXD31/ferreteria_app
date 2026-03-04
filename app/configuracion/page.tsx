@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,10 +11,14 @@ import { Textarea } from "@/components/ui/textarea"
 import { Settings, Save, Loader2, Building, Image as ImageIcon } from "lucide-react"
 import { toast } from "react-toastify"
 import Image from "next/image"
+import { useEmpresa } from "@/contexts/empresa-context"
 
 export default function ConfigPage() {
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
+    const [uploadingImage, setUploadingImage] = useState(false)
+    const { refreshEmpresa } = useEmpresa()
+    const fileInputRef = useRef<HTMLInputElement>(null)
     const [formData, setFormData] = useState({
         nombre: "",
         ruc: "",
@@ -69,6 +73,7 @@ export default function ConfigPage() {
             })
 
             if (res.ok) {
+                await refreshEmpresa()
                 toast.success("Configuración de empresa actualizada")
             } else {
                 toast.error("Error al actualizar configuración")
@@ -81,6 +86,41 @@ export default function ConfigPage() {
         }
     }
 
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        if (!file.type.startsWith("image/")) {
+            toast.warning("Por favor selecciona un archivo de imagen válido")
+            return
+        }
+
+        try {
+            setUploadingImage(true)
+            const data = new FormData()
+            data.append("file", file)
+
+            const res = await fetch("/api/upload", {
+                method: "POST",
+                body: data
+            })
+
+            const result = await res.json()
+
+            if (result.success) {
+                setFormData(prev => ({ ...prev, logo_url: result.url }))
+                toast.success("Logo subido correctamente (Recuerde Guardar Cambios)")
+            } else {
+                toast.error(result.message || "Error al subir imagen")
+            }
+        } catch (error) {
+            console.error("Upload error:", error)
+            toast.error("Error al procesar la imagen")
+        } finally {
+            setUploadingImage(false)
+        }
+    }
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target
         setFormData(prev => ({ ...prev, [name]: value }))
@@ -90,8 +130,8 @@ export default function ConfigPage() {
         <SidebarProvider>
             <AppSidebar />
             <SidebarInset>
-                <div className="min-h-screen bg-gradient-to-br from-slate-100 dark:from-black via-slate-50 dark:via-gray-900 to-white dark:to-slate-900">
-                    <header className="flex h-16 w-full items-center border-b border-gray-700 bg-gray-800/50 backdrop-blur-xl px-4 text-slate-900 dark:text-white">
+                <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white">
+                    <header className="h-16 border-b border-slate-200 dark:border-slate-800 flex items-center px-6 justify-between bg-slate-100/50 dark:bg-slate-900/50 backdrop-blur-xl">
                         <div className="flex items-center gap-2">
                             <SidebarTrigger className="-ml-1" />
                             <h1 className="text-xl font-semibold">Configuración de la Empresa</h1>
@@ -203,17 +243,37 @@ export default function ConfigPage() {
                                                 </div>
 
                                                 <div className="space-y-2">
-                                                    <Label htmlFor="logo_url">Ruta / URL del Logo</Label>
-                                                    <div className="flex gap-2">
-                                                        <Input
-                                                            id="logo_url"
-                                                            name="logo_url"
-                                                            value={formData.logo_url}
-                                                            onChange={handleChange}
-                                                            className="bg-slate-100 dark:bg-slate-900/50 border-slate-300 dark:border-slate-700"
+                                                    <Label htmlFor="logo_url">Logotipo de la Empresa</Label>
+                                                    <div className="flex flex-col gap-4 items-start">
+                                                        {formData.logo_url && (
+                                                            <div className="relative w-48 h-32 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg overflow-hidden bg-white dark:bg-slate-900/50 flex items-center justify-center p-2">
+                                                                <Image
+                                                                    src={formData.logo_url}
+                                                                    alt="Logo Preview"
+                                                                    fill
+                                                                    className="object-contain"
+                                                                />
+                                                            </div>
+                                                        )}
+                                                        <input
+                                                            type="file"
+                                                            accept="image/*"
+                                                            className="hidden"
+                                                            ref={fileInputRef}
+                                                            onChange={handleImageUpload}
                                                         />
-                                                        <Button type="button" variant="outline" size="icon" className="shrink-0 border-slate-300 dark:border-slate-700 bg-slate-200 dark:bg-slate-800">
-                                                            <ImageIcon className="h-4 w-4" />
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            onClick={() => fileInputRef.current?.click()}
+                                                            disabled={uploadingImage}
+                                                            className="border-slate-300 dark:border-slate-700 bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200"
+                                                        >
+                                                            {uploadingImage ? (
+                                                                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Subiendo...</>
+                                                            ) : (
+                                                                <><ImageIcon className="mr-2 h-4 w-4" /> Cambiar Logo</>
+                                                            )}
                                                         </Button>
                                                     </div>
                                                 </div>
