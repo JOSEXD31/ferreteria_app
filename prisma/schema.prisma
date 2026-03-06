@@ -39,6 +39,7 @@ model unidad_medida {
   nombre      String     @db.VarChar(50)
   abreviatura String     @db.VarChar(10)
   productos   producto[]
+  precios     producto_precio[]
 
   @@map("unidades_medida")
 }
@@ -64,9 +65,25 @@ model producto {
   trabajo_materiales trabajo_material[]
   detalle_cotizaciones detalle_cotizacion[]
 
+  precios            producto_precio[]
   @@index([id_categoria], map: "id_categoria")
   @@index([id_unidad], map: "id_unidad")
   @@map("productos")
+}
+
+model producto_precio {
+  id_precio      Int             @id @default(autoincrement())
+  id_producto    Int
+  id_unidad      Int
+  nombre         String          @db.VarChar(50)
+  factor         Decimal         @db.Decimal(12, 2)
+  precio         Decimal         @db.Decimal(10, 2)
+  producto       producto        @relation(fields: [id_producto], references: [id_producto], onDelete: Cascade)
+  unidad_medida  unidad_medida   @relation(fields: [id_unidad], references: [id_unidad], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id_producto])
+  @@index([id_unidad])
+  @@map("productos_precios")
 }
 
 model movimiento_inventario {
@@ -156,6 +173,9 @@ model venta {
   metodo_pago         MetodoPago?       @default(efectivo)
   monto_efectivo      Decimal?          @db.Decimal(12, 2)
   monto_transferencia Decimal?          @db.Decimal(12, 2)
+  serie               String?           @db.VarChar(10)
+  correlativo         Int?
+  porcentaje_igv      Decimal?          @db.Decimal(5, 2)
   detalles   detalle_venta[]
   cliente    cliente?        @relation(fields: [id_cliente], references: [id_cliente], onDelete: NoAction, onUpdate: NoAction, map: "ventas_ibfk_1")
   usuario    usuario?        @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction, map: "ventas_ibfk_2")
@@ -173,6 +193,8 @@ model detalle_venta {
   cantidad        Decimal?  @db.Decimal(12, 2)
   precio_unitario Decimal?  @db.Decimal(10, 2)
   subtotal        Decimal?  @db.Decimal(12, 2)
+  unidad          String?   @db.VarChar(50)
+  factor          Decimal?  @default(1.00) @db.Decimal(12, 2)
   venta           venta     @relation(fields: [id_venta], references: [id_venta], onDelete: Cascade, onUpdate: NoAction, map: "detalle_ventas_ibfk_1")
   producto        producto? @relation(fields: [id_producto], references: [id_producto], onDelete: NoAction, onUpdate: NoAction, map: "detalle_ventas_ibfk_2")
 
@@ -307,6 +329,9 @@ model cotizacion {
   igv           Decimal?           @db.Decimal(12, 2)
   total         Decimal?           @db.Decimal(12, 2)
   estado        EstadoCotizacion?  @default(pendiente)
+  serie         String?            @db.VarChar(10)
+  correlativo   Int?
+  porcentaje_igv Decimal?          @db.Decimal(5, 2)
   detalles      detalle_cotizacion[]
   cliente       cliente?           @relation(fields: [id_cliente], references: [id_cliente], onDelete: NoAction, onUpdate: NoAction)
   usuario       usuario?           @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
@@ -324,6 +349,8 @@ model detalle_cotizacion {
   cantidad        Decimal?  @db.Decimal(12, 2)
   precio_unitario Decimal?  @db.Decimal(10, 2)
   subtotal        Decimal?  @db.Decimal(12, 2)
+  unidad          String?   @db.VarChar(50)
+  factor          Decimal?  @default(1.00) @db.Decimal(12, 2)
   cotizacion      cotizacion @relation(fields: [id_cotizacion], references: [id_cotizacion], onDelete: Cascade, onUpdate: NoAction)
   producto        producto?  @relation(fields: [id_producto], references: [id_producto], onDelete: NoAction, onUpdate: NoAction)
 
@@ -346,4 +373,16 @@ model empresa {
   fecha_actualizacion DateTime? @default(now()) @updatedAt @db.Timestamp(0)
 
   @@map("empresa")
+}
+
+model configuracion_comprobante {
+  id              Int      @id @default(autoincrement())
+  nombre          String   @db.VarChar(50)
+  aplica_igv      Boolean  @default(true)
+  porcentaje_igv  Decimal  @default(18.00) @db.Decimal(5, 2)
+  serie           String?  @db.VarChar(10)
+  correlativo     Int      @default(1)
+  activo          Boolean  @default(true)
+
+  @@map("configuracion_comprobante")
 }

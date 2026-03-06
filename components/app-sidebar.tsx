@@ -122,11 +122,6 @@ export function AppSidebar() {
             icon: BarChart3,
           },
           {
-            title: "Usuarios",
-            url: "/usuarios",
-            icon: Shield,
-          },
-          {
             title: "Configuración",
             url: "/configuracion",
             icon: Settings,

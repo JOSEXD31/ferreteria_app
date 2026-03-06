@@ -24,46 +24,46 @@ export default function DashboardPage() {
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF', '#FF4560'];
 
+  const [isLoading, setIsLoading] = useState(true)
+
   useEffect(() => {
-    setUserRole(localStorage.getItem("userRole") || "")
-    setUsername(localStorage.getItem("username") || "")
-    
-    // Simular carga de métricas (luego crear APIs)
-    const fetchMetrics = async () => {
-      // Por ahora datos estáticos para visualizar el cambio
-      setMetrics({
-        totalClientes: 124,
-        ventasHoy: 1540.50,
-        stockBajo: 8,
-        trabajosPendientes: 5
-      })
-      
-      setVentasCategoria([
-        { name: 'Herramientas', value: 400 },
-        { name: 'Pinturas', value: 300 },
-        { name: 'Electricidad', value: 300 },
-        { name: 'Construcción', value: 200 },
-      ])
+    const initDashboard = async () => {
+      setIsLoading(true)
+      try {
+        // Fetch session
+        const sessRes = await fetch("/api/auth/session")
+        const sessData = await sessRes.json()
+        if (sessData.user) {
+          setUserRole(sessData.user.role)
+          setUsername(sessData.user.name)
+        }
 
-      setTendenciaIngresos([
-        { date: 'Lun', amount: 1200 },
-        { date: 'Mar', amount: 1900 },
-        { date: 'Mie', amount: 1500 },
-        { date: 'Jue', amount: 2100 },
-        { date: 'Vie', amount: 2400 },
-        { date: 'Sab', amount: 1800 },
-        { date: 'Dom', amount: 500 },
-      ])
-
-      setStockTop([
-        { name: 'Martillo Galp.', stock: 15 },
-        { name: 'Cinta Métrica', stock: 4 },
-        { name: 'Taladro Perc.', stock: 2 },
-        { name: 'Pintura Blanca 1G', stock: 20 },
-      ])
+        // Fetch metrics
+        const metRes = await fetch("/api/dashboard")
+        const metData = await metRes.json()
+        if (metData.metrics) {
+          setMetrics(metData.metrics)
+          setVentasCategoria(metData.ventasCategoria)
+          setTendenciaIngresos(metData.tendenciaIngresos)
+          setStockTop(metData.stockTop)
+        }
+      } catch (error) {
+        console.error("Error initializing dashboard:", error)
+      } finally {
+        setIsLoading(false)
+      }
     }
-    fetchMetrics()
+    initDashboard()
   }, [])
+
+  const SkeletonCard = () => (
+    <Card className="bg-slate-200/40 dark:bg-slate-800/40 border-slate-300 dark:border-slate-700 animate-pulse">
+      <CardContent className="p-4">
+        <div className="h-4 bg-slate-300 dark:bg-slate-700 rounded w-1/2 mb-2"></div>
+        <div className="h-8 bg-slate-300 dark:bg-slate-700 rounded w-3/4"></div>
+      </CardContent>
+    </Card>
+  )
 
   return (
     <SidebarProvider>
@@ -81,61 +81,72 @@ export default function DashboardPage() {
           <div className="flex-1 space-y-6 p-4 sm:p-6">
             {/* Estadísticas rápidas hardware store */}
             <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
-              <Card className="bg-slate-200/40 dark:bg-slate-800/40 border-slate-300 dark:border-slate-700 backdrop-blur-md">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-400 uppercase tracking-wider">Ventas Hoy</p>
-                      <p className="text-2xl font-bold text-slate-900 dark:text-white">S/ {metrics.ventasHoy.toFixed(2)}</p>
-                    </div>
-                    <div className="p-2 bg-green-500/20 rounded-lg">
-                      <TrendingUp className="w-6 h-6 text-green-400" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              {isLoading ? (
+                <>
+                  <SkeletonCard />
+                  <SkeletonCard />
+                  <SkeletonCard />
+                  <SkeletonCard />
+                </>
+              ) : (
+                <>
+                  <Card className="bg-slate-200/40 dark:bg-slate-800/40 border-slate-300 dark:border-slate-700 backdrop-blur-md">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wider">Ventas Hoy</p>
+                          <p className="text-2xl font-bold text-slate-900 dark:text-white">S/ {metrics.ventasHoy.toFixed(2)}</p>
+                        </div>
+                        <div className="p-2 bg-green-500/20 rounded-lg">
+                          <TrendingUp className="w-6 h-6 text-green-400" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
 
-              <Card className="bg-slate-200/40 dark:bg-slate-800/40 border-slate-300 dark:border-slate-700 backdrop-blur-md">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-400 uppercase tracking-wider">Stock Bajo</p>
-                      <p className="text-2xl font-bold text-slate-900 dark:text-white">{metrics.stockBajo} Artíc.</p>
-                    </div>
-                    <div className="p-2 bg-red-500/20 rounded-lg">
-                      <AlertTriangle className="w-6 h-6 text-red-400" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  <Card className="bg-slate-200/40 dark:bg-slate-800/40 border-slate-300 dark:border-slate-700 backdrop-blur-md">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wider">Stock Bajo</p>
+                          <p className="text-2xl font-bold text-slate-900 dark:text-white">{metrics.stockBajo} Artíc.</p>
+                        </div>
+                        <div className="p-2 bg-red-500/20 rounded-lg">
+                          <AlertTriangle className="w-6 h-6 text-red-400" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
 
-              <Card className="bg-slate-200/40 dark:bg-slate-800/40 border-slate-300 dark:border-slate-700 backdrop-blur-md">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-400 uppercase tracking-wider">Servicios / Trabajos</p>
-                      <p className="text-2xl font-bold text-slate-900 dark:text-white">{metrics.trabajosPendientes}</p>
-                    </div>
-                    <div className="p-2 bg-blue-500/20 rounded-lg">
-                      <Wrench className="w-6 h-6 text-blue-400" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  <Card className="bg-slate-200/40 dark:bg-slate-800/40 border-slate-300 dark:border-slate-700 backdrop-blur-md">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wider">Servicios / Trabajos</p>
+                          <p className="text-2xl font-bold text-slate-900 dark:text-white">{metrics.trabajosPendientes}</p>
+                        </div>
+                        <div className="p-2 bg-blue-500/20 rounded-lg">
+                          <Wrench className="w-6 h-6 text-blue-400" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
 
-              <Card className="bg-slate-200/40 dark:bg-slate-800/40 border-slate-300 dark:border-slate-700 backdrop-blur-md">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-400 uppercase tracking-wider">Clientes</p>
-                      <p className="text-2xl font-bold text-slate-900 dark:text-white">{metrics.totalClientes}</p>
-                    </div>
-                    <div className="p-2 bg-purple-500/20 rounded-lg">
-                      <Users className="w-6 h-6 text-purple-400" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  <Card className="bg-slate-200/40 dark:bg-slate-800/40 border-slate-300 dark:border-slate-700 backdrop-blur-md">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wider">Clientes</p>
+                          <p className="text-2xl font-bold text-slate-900 dark:text-white">{metrics.totalClientes}</p>
+                        </div>
+                        <div className="p-2 bg-purple-500/20 rounded-lg">
+                          <Users className="w-6 h-6 text-purple-400" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
             </div>
 
             <div className="grid gap-6 lg:grid-cols-2">

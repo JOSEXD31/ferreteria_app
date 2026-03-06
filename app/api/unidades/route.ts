@@ -1,8 +1,20 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { z } from "zod"
+import { getSession } from "@/lib/auth"
+
+const unidadSchema = z.object({
+  nombre: z.string().min(1, "El nombre es obligatorio"),
+  abreviatura: z.string().min(1, "La abreviatura es obligatoria"),
+})
 
 export async function GET() {
   try {
+    const session = await getSession()
+    if (!session) {
+      return NextResponse.json({ message: "No autorizado" }, { status: 401 })
+    }
+
     const unidades = await prisma.unidad_medida.findMany({
       orderBy: { nombre: "asc" },
     })
@@ -15,12 +27,19 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
-    const { nombre, abreviatura } = body
-
-    if (!nombre || !abreviatura) {
-      return NextResponse.json({ message: "Nombre y abreviatura son obligatorios" }, { status: 400 })
+    const session = await getSession()
+    if (!session) {
+      return NextResponse.json({ message: "No autorizado" }, { status: 401 })
     }
+
+    const body = await request.json()
+    const validation = unidadSchema.safeParse(body)
+    
+    if (!validation.success) {
+      return NextResponse.json({ message: "Datos inválidos", errors: validation.error.format() }, { status: 400 })
+    }
+
+    const { nombre, abreviatura } = validation.data
 
     const nuevaUnidad = await prisma.unidad_medida.create({
       data: {
@@ -38,15 +57,27 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    const body = await request.json()
-    const { id_unidad, nombre, abreviatura } = body
-
-    if (!id_unidad || !nombre || !abreviatura) {
-      return NextResponse.json({ message: "ID, nombre y abreviatura son obligatorios" }, { status: 400 })
+    const session = await getSession()
+    if (!session) {
+      return NextResponse.json({ message: "No autorizado" }, { status: 401 })
     }
 
+    const body = await request.json()
+    const { id_unidad, ...rest } = body
+
+    if (!id_unidad) {
+      return NextResponse.json({ message: "ID es obligatorio" }, { status: 400 })
+    }
+
+    const validation = unidadSchema.safeParse(rest)
+    if (!validation.success) {
+      return NextResponse.json({ message: "Datos inválidos", errors: validation.error.format() }, { status: 400 })
+    }
+
+    const { nombre, abreviatura } = validation.data
+
     const unidadActualizada = await prisma.unidad_medida.update({
-      where: { id_unidad: parseInt(id_unidad) },
+      where: { id_unidad: parseInt(id_unidad.toString()) },
       data: {
         nombre,
         abreviatura,
@@ -62,6 +93,11 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const session = await getSession()
+    if (!session) {
+      return NextResponse.json({ message: "No autorizado" }, { status: 401 })
+    }
+
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
 
@@ -82,3 +118,4 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ message: "Error al eliminar unidad de medida" }, { status: 500 })
   }
 }
+

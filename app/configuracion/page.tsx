@@ -2,16 +2,17 @@
 
 import { useState, useEffect, useRef } from "react"
 import { AppSidebar } from "@/components/app-sidebar"
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Settings, Save, Loader2, Building, Image as ImageIcon } from "lucide-react"
+import { Building, Save, Loader2, Image as ImageIcon } from "lucide-react"
 import { toast } from "react-toastify"
 import Image from "next/image"
 import { useEmpresa } from "@/contexts/empresa-context"
+import { ConfigHeader } from "@/components/config-header"
 
 export default function ConfigPage() {
     const [loading, setLoading] = useState(true)
@@ -130,15 +131,10 @@ export default function ConfigPage() {
         <SidebarProvider>
             <AppSidebar />
             <SidebarInset>
-                <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white">
-                    <header className="h-16 border-b border-slate-200 dark:border-slate-800 flex items-center px-6 justify-between bg-slate-100/50 dark:bg-slate-900/50 backdrop-blur-xl">
-                        <div className="flex items-center gap-2">
-                            <SidebarTrigger className="-ml-1" />
-                            <h1 className="text-xl font-semibold">Configuración de la Empresa</h1>
-                        </div>
-                    </header>
+                <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col">
+                    <ConfigHeader />
 
-                    <div className="p-6 max-w-4xl mx-auto">
+                    <div className="p-6 max-w-4xl mx-auto space-y-6 w-full flex-1">
                         <Card className="bg-slate-200/40 dark:bg-slate-800/40 border-slate-300 dark:border-slate-700 backdrop-blur-md">
                             <CardHeader>
                                 <div className="flex items-center gap-2">

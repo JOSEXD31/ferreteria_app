@@ -35,6 +35,16 @@ interface Producto {
     id_unidad?: number
     categoria?: { nombre: string, id_categoria: number }
     unidad_medida?: { abreviatura: string, id_unidad: number }
+    precios?: ProductoPrecio[]
+}
+
+interface ProductoPrecio {
+    id_precio?: number
+    nombre: string
+    id_unidad: string
+    factor: string
+    precio: string
+    unidad_medida?: { nombre: string, abreviatura: string }
 }
 
 export default function InventoryPage() {
@@ -55,10 +65,25 @@ export default function InventoryPage() {
         precio_compra: "",
         precio_venta: "",
         stock_actual: "",
-        stock_minimo: ""
+        stock_minimo: "",
+        precios: [] as ProductoPrecio[]
     })
 
+    const [userRole, setUserRole] = useState("")
+
     useEffect(() => {
+        const checkSession = async () => {
+            try {
+                const res = await fetch("/api/auth/session")
+                const data = await res.json()
+                if (data.user) {
+                    setUserRole(data.user.role)
+                }
+            } catch (error) {
+                console.error("Auth check failed:", error)
+            }
+        }
+        checkSession()
         fetchData()
     }, [])
 
@@ -122,7 +147,8 @@ export default function InventoryPage() {
             precio_compra: "",
             precio_venta: "",
             stock_actual: "",
-            stock_minimo: ""
+            stock_minimo: "",
+            precios: []
         })
     }
 
@@ -137,7 +163,13 @@ export default function InventoryPage() {
             precio_compra: producto.precio_compra?.toString() || "0",
             precio_venta: producto.precio_venta?.toString() || "0",
             stock_actual: producto.stock_actual?.toString() || "0",
-            stock_minimo: producto.stock_minimo?.toString() || "0"
+            stock_minimo: producto.stock_minimo?.toString() || "0",
+            precios: (producto.precios || []).map(p => ({
+                ...p,
+                id_unidad: p.id_unidad.toString(),
+                factor: p.factor.toString(),
+                precio: p.precio.toString()
+            }))
         })
         setIsModalOpen(true)
     }
@@ -255,6 +287,110 @@ export default function InventoryPage() {
                                                     </div>
                                                 </div>
 
+                                                <div className="mt-4 p-4 border rounded-lg border-slate-300 dark:border-slate-700 bg-slate-200/20 dark:bg-slate-800/20">
+                                                    <div className="flex justify-between items-center mb-4">
+                                                        <h3 className="text-sm font-semibold flex items-center gap-2">
+                                                            <Tags className="h-4 w-4" />
+                                                            Precios Alternativos (Ej: Bobina, Caja)
+                                                        </h3>
+                                                        <div className="bg-blue-500/10 border border-blue-500/20 p-2 rounded text-[10px] text-blue-600 dark:text-blue-400 mb-3">
+                                                            <strong>Importante:</strong> La unidad base del producto arriba debe ser la <strong>MENOR</strong> unidad (Ej: Metro, Gramo, Unidad). Las alternativas deben ser múltiplos (Ej: Bobina = 100 Metros).
+                                                        </div>
+                                                        <Button 
+                                                            type="button" 
+                                                            variant="outline" 
+                                                            size="sm" 
+                                                            onClick={() => setFormData({
+                                                                ...formData, 
+                                                                precios: [...formData.precios, { nombre: "", id_unidad: "", factor: "1", precio: "0" }]
+                                                            })}
+                                                        >
+                                                            <Plus className="h-4 w-4 mr-2" /> Agregar
+                                                        </Button>
+                                                    </div>
+                                                    
+                                                    {formData.precios.map((p, idx) => (
+                                                        <div key={idx} className="grid grid-cols-4 gap-2 mb-2 items-end">
+                                                            <div className="space-y-1">
+                                                                <Label className="text-[10px]">Nombre (Ej: Bobina)</Label>
+                                                                <Input 
+                                                                    placeholder="Nombre" 
+                                                                    value={p.nombre} 
+                                                                    onChange={e => {
+                                                                        const newPrecios = [...formData.precios]
+                                                                        newPrecios[idx].nombre = e.target.value
+                                                                        setFormData({ ...formData, precios: newPrecios })
+                                                                    }}
+                                                                    className="h-8 text-xs bg-slate-200 dark:bg-slate-700"
+                                                                />
+                                                            </div>
+                                                            <div className="space-y-1">
+                                                                <Label className="text-[10px]">Unidad</Label>
+                                                                <Select 
+                                                                    value={p.id_unidad} 
+                                                                    onValueChange={v => {
+                                                                        const newPrecios = [...formData.precios]
+                                                                        newPrecios[idx].id_unidad = v
+                                                                        setFormData({ ...formData, precios: newPrecios })
+                                                                    }}
+                                                                >
+                                                                    <SelectTrigger className="h-8 text-xs bg-slate-200 dark:bg-slate-700">
+                                                                        <SelectValue placeholder="Unidad" />
+                                                                    </SelectTrigger>
+                                                                    <SelectContent className="bg-slate-100 dark:bg-slate-800">
+                                                                        {unidades.map((u: any) => (
+                                                                            <SelectItem key={u.id_unidad} value={u.id_unidad.toString()}>{u.abreviatura}</SelectItem>
+                                                                        ))}
+                                                                    </SelectContent>
+                                                                </Select>
+                                                            </div>
+                                                            <div className="space-y-1">
+                                                                <Label className="text-[10px]">Factor (Mts en Bobina)</Label>
+                                                                <Input 
+                                                                    type="number" 
+                                                                    value={p.factor} 
+                                                                    onChange={e => {
+                                                                        const newPrecios = [...formData.precios]
+                                                                        newPrecios[idx].factor = e.target.value
+                                                                        setFormData({ ...formData, precios: newPrecios })
+                                                                    }}
+                                                                    className="h-8 text-xs bg-slate-200 dark:bg-slate-700"
+                                                                />
+                                                            </div>
+                                                            <div className="flex gap-1 items-center">
+                                                                <div className="space-y-1 flex-1">
+                                                                    <Label className="text-[10px]">Precio S/</Label>
+                                                                    <Input 
+                                                                        type="number" 
+                                                                        value={p.precio} 
+                                                                        onChange={e => {
+                                                                            const newPrecios = [...formData.precios]
+                                                                            newPrecios[idx].precio = e.target.value
+                                                                            setFormData({ ...formData, precios: newPrecios })
+                                                                        }}
+                                                                        className="h-8 text-xs bg-slate-200 dark:bg-slate-700"
+                                                                    />
+                                                                </div>
+                                                                <Button 
+                                                                    type="button" 
+                                                                    variant="ghost" 
+                                                                    size="icon" 
+                                                                    onClick={() => {
+                                                                        const newPrecios = formData.precios.filter((_, i) => i !== idx)
+                                                                        setFormData({ ...formData, precios: newPrecios })
+                                                                    }}
+                                                                    className="h-8 w-8 text-red-400"
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </Button>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                    {formData.precios.length === 0 && (
+                                                        <p className="text-center text-xs text-slate-500 py-2">No hay precios alternativos configurados.</p>
+                                                    )}
+                                                </div>
+
                                                 <div className="flex justify-end gap-2">
                                                     <Button variant="ghost" onClick={() => setIsModalOpen(false)}>Cancelar</Button>
                                                     <Button onClick={handleSubmit} className="bg-blue-600 hover:bg-blue-700">Guardar</Button>
@@ -289,7 +425,18 @@ export default function InventoryPage() {
                                         </TableHeader>
                                         <TableBody className="bg-slate-200/20 dark:bg-slate-800/20">
                                             {loading ? (
-                                                <TableRow><TableCell colSpan={6} className="text-center py-10 text-slate-400 dark:text-slate-500 dark:text-slate-400">Cargando inventario...</TableCell></TableRow>
+                                                <>
+                                                    {[1, 2, 3, 4, 5].map((i) => (
+                                                        <TableRow key={i} className="animate-pulse border-slate-300 dark:border-slate-700">
+                                                            <TableCell><div className="h-4 bg-slate-100 dark:bg-slate-700 rounded w-16"></div></TableCell>
+                                                            <TableCell><div className="h-4 bg-slate-100 dark:bg-slate-700 rounded w-32"></div></TableCell>
+                                                            <TableCell><div className="h-4 bg-slate-100 dark:bg-slate-700 rounded w-20"></div></TableCell>
+                                                            <TableCell><div className="h-4 bg-slate-100 dark:bg-slate-700 rounded w-24"></div></TableCell>
+                                                            <TableCell><div className="h-4 bg-slate-100 dark:bg-slate-700 rounded w-20"></div></TableCell>
+                                                            <TableCell className="text-right flex justify-end gap-1"><div className="h-8 w-8 bg-slate-100 dark:bg-slate-700 rounded-full"></div></TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </>
                                             ) : filteredProductos.map(p => (
                                                 <TableRow key={p.id_producto} className="border-slate-300 dark:border-slate-700 hover:bg-slate-300/30 dark:bg-slate-700/30">
                                                     <TableCell className="text-slate-400 dark:text-slate-500 dark:text-slate-400 font-mono text-xs">{p.codigo || '---'}</TableCell>
@@ -297,10 +444,16 @@ export default function InventoryPage() {
                                                     <TableCell><Badge variant="outline" className="text-xs">{p.categoria?.nombre || 'General'}</Badge></TableCell>
                                                     <TableCell>
                                                         <div className="flex items-center gap-2">
-                                                            <span className={p.stock_actual <= p.stock_minimo ? "text-red-400 font-bold" : "text-green-400"}>
-                                                                {p.stock_actual} {p.unidad_medida?.abreviatura}
-                                                            </span>
-                                                            {p.stock_actual <= p.stock_minimo && <AlertTriangle className="h-4 w-4 text-red-500" />}
+                                                            {Number(p.stock_actual) <= Number(p.stock_minimo) ? (
+                                                                <Badge variant="destructive" className="bg-red-600 hover:bg-red-700 text-white flex items-center gap-1 font-bold animate-pulse">
+                                                                    <AlertTriangle className="h-3 w-3" />
+                                                                    {Number(p.stock_actual)} {p.unidad_medida?.abreviatura}
+                                                                </Badge>
+                                                            ) : (
+                                                                <Badge className="bg-green-600 hover:bg-green-700 text-white font-medium">
+                                                                    {Number(p.stock_actual)} {p.unidad_medida?.abreviatura}
+                                                                </Badge>
+                                                            )}
                                                         </div>
                                                     </TableCell>
                                                     <TableCell className="text-slate-900 dark:text-white font-semibold">S/ {Number(p.precio_venta).toFixed(2)}</TableCell>

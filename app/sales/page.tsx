@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "react-toastify"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
@@ -25,11 +26,15 @@ interface Product {
     precio_venta: number
     stock_actual: number
     unidad_medida?: { abreviatura: string }
+    precios?: any[]
 }
 
 interface CartItem extends Product {
     cantidad: number
     subtotal: number
+    unidad_seleccionada: string
+    factor_seleccionado: number
+    precio_unitario: number // The effective price for the selected unit
 }
 
 export default function SalesPage() {
@@ -45,7 +50,6 @@ export default function SalesPage() {
     const [newClientData, setNewClientData] = useState({ dni_ruc: "", nombre: "", telefono: "", direccion: "" })
 
     const [paymentType, setPaymentType] = useState<"Efectivo" | "Transferencia" | "Mixto">("Efectivo")
-    const [tipoComprobante, setTipoComprobante] = useState<"Ticket" | "Boleta" | "Factura">("Ticket")
     const [montoEfectivo, setMontoEfectivo] = useState(0)
     const [montoTransferencia, setMontoTransferencia] = useState(0)
 
@@ -58,12 +62,67 @@ export default function SalesPage() {
 
     const [selectedSaleDetail, setSelectedSaleDetail] = useState<any>(null)
     const [isSaleDetailOpen, setIsSaleDetailOpen] = useState(false)
+    const [printFormat, setPrintFormat] = useState<"Ticket" | "A4">("Ticket")
+    const [comprobantes, setComprobantes] = useState<any[]>([])
+    const [selectedCompType, setSelectedCompType] = useState<any>(null)
+    const [company, setCompany] = useState<any>({
+        nombre: "SISTEMA FERRETERÍA",
+        ruc: "10123456789",
+        direccion: "Av. Principal 123, Ciudad",
+        telefono: "(01) 456-7890",
+        email: "ventas@sistema.com",
+        mensaje_ticket: "¡GRACIAS POR SU PREFERENCIA!"
+    })
+
+    const [userRole, setUserRole] = useState("")
+    const [userId, setUserId] = useState<number | null>(null)
 
     useEffect(() => {
+        const fetchSession = async () => {
+            try {
+                const res = await fetch("/api/auth/session")
+                const data = await res.json()
+                if (data.user) {
+                    setUserRole(data.user.role)
+                    setUserId(data.user.id)
+                }
+            } catch (error) {
+                console.error("Auth check failed:", error)
+            }
+        }
+        fetchSession()
         fetchProducts()
         fetchVentas()
         fetchCotizaciones()
+        fetchCompany()
+        fetchComprobantes()
     }, [])
+
+    const fetchComprobantes = async () => {
+        try {
+            const res = await fetch("/api/configuracion/comprobantes")
+            const data = await res.json()
+            const list = Array.isArray(data) ? data : []
+            setComprobantes(list)
+            if (list.length > 0 && !selectedCompType) {
+                setSelectedCompType(list[0])
+            }
+        } catch (error) {
+            console.error("Error fetching comprobantes:", error)
+        }
+    }
+
+    const fetchCompany = async () => {
+        try {
+            const res = await fetch("/api/empresa")
+            const data = await res.json()
+            if (data && !data.message) {
+                setCompany(data)
+            }
+        } catch (error) {
+            console.error("Error fetching company:", error)
+        }
+    }
 
     const fetchCotizaciones = async () => {
         try {
@@ -123,31 +182,64 @@ export default function SalesPage() {
             }
             setCart(cart.map(item =>
                 item.id_producto === product.id_producto
-                    ? { ...item, cantidad: item.cantidad + 1, subtotal: (item.cantidad + 1) * item.precio_venta }
+                    ? { ...item, cantidad: item.cantidad + 1, subtotal: (item.cantidad + 1) * item.precio_unitario }
                     : item
             ))
         } else {
-            setCart([...cart, { ...product, cantidad: 1, subtotal: product.precio_venta }])
+            const newItem: CartItem = {
+                ...product,
+                cantidad: 1,
+                precio_unitario: product.precio_venta,
+                subtotal: product.precio_venta,
+                unidad_seleccionada: product.unidad_medida?.abreviatura || "Und",
+                factor_seleccionado: 1
+            }
+            setCart([...cart, newItem])
         }
+    }
+
+    const updateUnit = (id: number, unitName: string, factor: number, price: number) => {
+        setCart(cart.map(item => {
+            if (item.id_producto === id) {
+                const newSubtotal = item.cantidad * price
+                return { 
+                    ...item, 
+                    unidad_seleccionada: unitName, 
+                    factor_seleccionado: factor, 
+                    precio_unitario: price, 
+                    subtotal: newSubtotal 
+                }
+            }
+            return item
+        }))
     }
 
     const removeFromCart = (id: number) => {
         setCart(cart.filter(item => item.id_producto !== id))
     }
 
-    const updateQuantity = (id: number, delta: number) => {
+    const updateQuantity = (id: number, delta: number, directValue?: number) => {
         setCart(cart.map(item => {
             if (item.id_producto === id) {
-                const newQty = Math.max(1, item.cantidad + delta)
-                if (newQty > item.stock_actual) return item
-                return { ...item, cantidad: newQty, subtotal: newQty * item.precio_venta }
+                const newQty = directValue !== undefined ? directValue : item.cantidad + delta
+                if (newQty < 1) return item
+                // Stock check considering factor
+                if (newQty * item.factor_seleccionado > item.stock_actual) {
+                    toast.warning("Stock insuficiente para esta unidad")
+                    return item
+                }
+                return { ...item, cantidad: newQty, subtotal: newQty * item.precio_unitario }
             }
             return item
         }))
     }
 
     const total = cart.reduce((sum, item) => sum + item.subtotal, 0)
-    const igv = total * 0.18
+    
+    // Dynamic Tax Calculation based on selected document type
+    const igvRate = (Number(selectedCompType?.porcentaje_igv) || 18) / 100
+    const applyTax = selectedCompType?.aplica_igv
+    const igv = applyTax ? total * (igvRate / (1 + igvRate)) : 0
     const subtotalGeneral = total - igv
 
     const handleCreateClient = async (e: React.FormEvent) => {
@@ -206,18 +298,20 @@ export default function SalesPage() {
                 detalles: cart.map(item => ({
                     id_producto: item.id_producto,
                     cantidad: item.cantidad,
-                    precio_unitario: item.precio_venta,
+                    precio_unitario: item.precio_unitario,
                     subtotal: item.subtotal,
-                    descripcion: item.nombre
+                    descripcion: item.nombre,
+                    unidad: item.unidad_seleccionada,
+                    factor: item.factor_seleccionado
                 })),
                 total,
                 igv,
                 subtotal: subtotalGeneral,
-                id_usuario: parseInt(localStorage.getItem("userId") || "0"),
+                id_usuario: userId, // Changed from localStorage
                 id_cliente: selectedClient ? selectedClient.id_cliente : null,
                 tipo: "producto",
                 metodo_pago: paymentType,
-                tipo_comprobante: tipoComprobante,
+                tipo_comprobante: selectedCompType?.nombre || "ticket",
                 monto_efectivo: montoEfectivo,
                 monto_transferencia: montoTransferencia
             }
@@ -233,8 +327,12 @@ export default function SalesPage() {
             const ventaConfirmada = await res.json()
             toast.success("Venta realizada con éxito")
 
-            // Print the physical ticket automatically
-            printTicket(ventaConfirmada)
+            // Print the physical document automatically
+            if (printFormat === "Ticket") {
+                printTicket(ventaConfirmada)
+            } else {
+                printA4(ventaConfirmada)
+            }
 
             setCart([])
             setSelectedClient(null)
@@ -260,20 +358,32 @@ export default function SalesPage() {
                     detalles: cart.map(item => ({
                         id_producto: item.id_producto,
                         cantidad: item.cantidad,
-                        precio_unitario: item.precio_venta,
+                        precio_unitario: item.precio_unitario,
                         subtotal: item.subtotal,
-                        descripcion: item.nombre
+                        descripcion: item.nombre,
+                        unidad: item.unidad_seleccionada,
+                        factor: item.factor_seleccionado
                     })),
                     total,
                     igv,
                     subtotal: subtotalGeneral,
-                    id_usuario: parseInt(localStorage.getItem("userId") || "0"),
+                    porcentaje_igv: selectedCompType?.porcentaje_igv || 18,
+                    id_usuario: userId,
                     id_cliente: selectedClient ? selectedClient.id_cliente : null
                 })
             })
 
             if (!res.ok) throw new Error("Error")
+            const cotizacionConfirmada = await res.json()
             toast.success("Cotización guardada con éxito")
+            
+            // Print automatically after saving
+            if (printFormat === "Ticket") {
+                printTicket(cotizacionConfirmada)
+            } else {
+                printA4(cotizacionConfirmada)
+            }
+            
             setCart([])
             setSelectedClient(null)
             setClientSearch("")
@@ -304,6 +414,10 @@ export default function SalesPage() {
     }
 
     const printCotizacion = (c: any) => {
+        if (printFormat === "Ticket") {
+            printTicket(c)
+            return
+        }
         const printWindow = window.open("", "_blank")
         if (!printWindow) return
 
@@ -312,61 +426,96 @@ export default function SalesPage() {
             <head>
                 <title>Cotización #${c.id_cotizacion}</title>
                 <style>
-                    body { font-family: Arial, sans-serif; padding: 40px; color: #333; }
-                    .header { text-align: center; margin-bottom: 40px; }
-                    .header h1 { margin: 0; color: #2563eb; }
-                    .info { margin-bottom: 30px; display: flex; justify-content: space-between; gap: 20px; }
-                    table { border-collapse: collapse; margin-top: 20px; width: 100%; }
-                    th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-                    th { background-color: #f8fafc; }
-                    .totals { width: 300px; margin-left: auto; margin-top: 20px; }
-                    .totals div { display: flex; justify-content: space-between; padding: 8px 0; }
-                    .totals .final { font-size: 1.2em; font-weight: bold; border-top: 2px solid #ddd; padding-top: 12px; }
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #1e293b; max-width: 800px; margin: auto; }
+                    .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #3b82f6; padding-bottom: 20px; margin-bottom: 30px; }
+                    .company-header { display: flex; gap: 20px; align-items: center; }
+                    .company-logo { width: 80px; height: 80px; object-fit: contain; }
+                    .company-info h1 { margin: 0; color: #1d4ed8; font-size: 28px; }
+                    .company-info p { margin: 4px 0; color: #64748b; font-size: 14px; }
+                    .doc-info { text-align: right; }
+                    .doc-box { border: 2px solid #3b82f6; padding: 15px; border-radius: 8px; background: #f8fafc; }
+                    .doc-box h2 { margin: 0; color: #1d4ed8; font-size: 20px; }
+                    .doc-box p { margin: 5px 0; font-weight: bold; font-size: 18px; }
+                    
+                    .client-info { margin-bottom: 30px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; background: #f1f5f9; padding: 20px; border-radius: 8px; }
+                    .client-info div p { margin: 5px 0; font-size: 14px; }
+                    
+                    table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+                    th { background-color: #3b82f6; color: white; padding: 12px; text-align: left; text-transform: uppercase; font-size: 12px; }
+                    td { padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
+                    
+                    .totals-container { display: flex; justify-content: flex-end; }
+                    .totals-table { width: 250px; }
+                    .totals-table div { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e2e8f0; }
+                    .totals-table .grand-total { border-bottom: none; font-size: 1.2em; font-weight: bold; color: #1d4ed8; padding-top: 15px; }
+                    
+                    .footer { margin-top: 50px; text-align: center; color: #94a3b8; font-size: 12px; border-top: 1px solid #e2e8f0; pt: 20px; }
                 </style>
             </head>
             <body>
                 <div class="header">
-                    <h1>SISTEMA FERRETERÍA</h1>
-                    <h3>COTIZACIÓN DE PRODUCTOS</h3>
+                    <div class="company-header">
+                        ${company.logo_url ? `<img src="${company.logo_url}" class="company-logo" />` : ''}
+                        <div class="company-info">
+                            <h1>${company.nombre}</h1>
+                            <p>RUC: ${company.ruc}</p>
+                            <p>${company.direccion}</p>
+                            <p>Tel: ${company.telefono} ${company.email ? `| Correo: ${company.email}` : ''}</p>
+                        </div>
+                    </div>
+                    <div class="doc-info">
+                        <div class="doc-box">
+                            <h2>COTIZACIÓN</h2>
+                            <p>N° ${c.serie && c.correlativo ? `${c.serie}-${c.correlativo.toString().padStart(6, '0')}` : `COT-${c.id_cotizacion.toString().padStart(6, '0')}`}</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="info">
+
+                <div class="client-info">
                     <div>
-                        <p><strong>N° Cotización:</strong> ${c.id_cotizacion.toString().padStart(6, '0')}</p>
-                        <p><strong>Fecha:</strong> ${new Date(c.fecha).toLocaleDateString()}</p>
+                        <p><strong>SEÑOR(ES):</strong> ${c.cliente ? c.cliente.nombre : 'CONSUMIDOR FINAL'}</p>
+                        <p><strong>DNI/RUC:</strong> ${c.cliente?.dni_ruc || '---'}</p>
+                        <p><strong>DIRECCIÓN:</strong> ${c.cliente?.direccion || '---'}</p>
                     </div>
                     <div>
-                        <p><strong>Cliente:</strong> ${c.cliente ? c.cliente.nombre : 'Consumidor Final'}</p>
-                        <p><strong>DNI/RUC:</strong> ${c.cliente ? (c.cliente.dni_ruc || '') : ''}</p>
+                        <p><strong>FECHA DE EMISIÓN:</strong> ${new Date(c.fecha || Date.now()).toLocaleDateString()}</p>
+                        <p><strong>VALIDEZ:</strong> 7 DÍAS</p>
+                        <p><strong>MONEDA:</strong> SOLES (S/)</p>
                     </div>
                 </div>
+
                 <table>
                     <thead>
                         <tr>
-                            <th>Descripción</th>
-                            <th>Cant.</th>
-                            <th>P. Unitario</th>
-                            <th>Subtotal</th>
+                            <th style="width: 10%;">CANT.</th>
+                            <th style="width: 60%;">DESCRIPCIÓN</th>
+                            <th style="width: 15%; text-align: right;">P. UNIT</th>
+                            <th style="width: 15%; text-align: right;">IMPORTE</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${c.detalles.map((d: any) => `
                             <tr>
+                                <td>${d.cantidad} ${d.unidad || ''}</td>
                                 <td>${d.descripcion}</td>
-                                <td>${d.cantidad}</td>
-                                <td>S/ ${Number(d.precio_unitario).toFixed(2)}</td>
-                                <td>S/ ${Number(d.subtotal).toFixed(2)}</td>
+                                <td style="text-align: right;">S/ ${Number(d.precio_unitario).toFixed(2)}</td>
+                                <td style="text-align: right;">S/ ${Number(d.subtotal).toFixed(2)}</td>
                             </tr>
                         `).join('')}
                     </tbody>
                 </table>
-                <div class="totals">
-                    <div><span>Subtotal:</span> <span>S/ ${Number(c.subtotal).toFixed(2)}</span></div>
-                    <div><span>IGV (18%):</span> <span>S/ ${Number(c.igv).toFixed(2)}</span></div>
-                    <div class="final"><span>TOTAL:</span> <span>S/ ${Number(c.total).toFixed(2)}</span></div>
+                <div class="totals-container">
+                    <div class="totals-table">
+                        <div><span>Subtotal:</span> <span>S/ ${Number(c.subtotal).toFixed(2)}</span></div>
+                        <div><span>IGV (${Number(c.porcentaje_igv || 18)}%):</span> <span>S/ ${Number(c.igv || 0).toFixed(2)}</span></div>
+                        <div class="grand-total"><span>TOTAL:</span> <span>S/ ${Number(c.total).toFixed(2)}</span></div>
+                    </div>
                 </div>
-                <p style="margin-top: 50px; text-align: center; color: #666; font-size: 0.9em;">
-                    Esta cotización tiene una validez de 7 días.
-                </p>
+                <div class="footer">
+                    <p>ESTA COTIZACIÓN ESTÁ SUJETA A DISPONIBILIDAD DE STOCK</p>
+                    <p>ESTA COTIZACIÓN TIENE UNA VALIDEZ DE 7 DÍAS.</p>
+                    <p><strong>¡GRACIAS POR SU PREFERENCIA!</strong></p>
+                </div>
             </body>
             </html>
         `
@@ -375,18 +524,146 @@ export default function SalesPage() {
         setTimeout(() => printWindow.print(), 250)
     }
 
-    const printTicket = (v: any) => {
-        const printWindow = window.open("", "_blank", "width=400,height=600")
+    const printA4 = (v: any) => {
+        const printWindow = window.open("", "_blank")
         if (!printWindow) return
 
-        const docNum = (v.id_venta || 0).toString().padStart(6, '0')
-        const esBoletaFactura = v.tipo_comprobante?.toLowerCase() === 'boleta' || v.tipo_comprobante?.toLowerCase() === 'factura'
-        const headerTitle = v.tipo_comprobante ? v.tipo_comprobante.toUpperCase() : "TICKET DE VENTA"
+        const esCotizacion = !!v.id_cotizacion && !v.id_venta
+        const docNum = v.serie && v.correlativo 
+            ? `${v.serie}-${v.correlativo.toString().padStart(6, '0')}` 
+            : (esCotizacion ? "COT-" : "") + (v.id_venta || v.id_cotizacion || 0).toString().padStart(6, '0')
+        
+        // Use document type from the object, fallback to generic titles
+        let headerTitle = "RECIBO DE VENTA"
+        if (esCotizacion) {
+            headerTitle = "COTIZACIÓN"
+        } else if (v.tipo_comprobante) {
+            headerTitle = v.tipo_comprobante.toUpperCase()
+        }
 
         const html = `
             <html>
             <head>
-                <title>Venta #${docNum}</title>
+                <title>${headerTitle} #${docNum}</title>
+                <style>
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #1e293b; max-width: 800px; margin: auto; }
+                    .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #3b82f6; padding-bottom: 20px; margin-bottom: 30px; }
+                    .company-header { display: flex; gap: 20px; align-items: center; }
+                    .company-logo { width: 80px; height: 80px; object-fit: contain; }
+                    .company-info h1 { margin: 0; color: #1d4ed8; font-size: 28px; }
+                    .company-info p { margin: 4px 0; color: #64748b; font-size: 14px; }
+                    .doc-info { text-align: right; }
+                    .doc-box { border: 2px solid #3b82f6; padding: 15px; border-radius: 8px; background: #f8fafc; }
+                    .doc-box h2 { margin: 0; color: #1d4ed8; font-size: 20px; }
+                    .doc-box p { margin: 5px 0; font-weight: bold; font-size: 18px; }
+                    
+                    .client-info { margin-bottom: 30px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; background: #f1f5f9; padding: 20px; border-radius: 8px; }
+                    .client-info div p { margin: 5px 0; font-size: 14px; }
+                    
+                    table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+                    th { background-color: #3b82f6; color: white; padding: 12px; text-align: left; text-transform: uppercase; font-size: 12px; }
+                    td { padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
+                    
+                    .totals-container { display: flex; justify-content: flex-end; }
+                    .totals-table { width: 250px; }
+                    .totals-table div { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e2e8f0; }
+                    .totals-table .grand-total { border-bottom: none; font-size: 1.2em; font-weight: bold; color: #1d4ed8; padding-top: 15px; }
+                    
+                    .footer { margin-top: 50px; text-align: center; color: #94a3b8; font-size: 12px; border-top: 1px solid #e2e8f0; pt: 20px; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <div class="company-header">
+                        ${company.logo_url ? `<img src="${company.logo_url}" class="company-logo" />` : ''}
+                        <div class="company-info">
+                            <h1>${company.nombre}</h1>
+                            <p>RUC: ${company.ruc}</p>
+                            <p>${company.direccion}</p>
+                            <p>Tel: ${company.telefono} ${company.email ? `| Correo: ${company.email}` : ''}</p>
+                        </div>
+                    </div>
+                    <div class="doc-info">
+                        <div class="doc-box">
+                            <h2>${headerTitle}</h2>
+                            <p>N° ${docNum}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="client-info">
+                    <div>
+                        <p><strong>SEÑOR(ES):</strong> ${v.cliente ? v.cliente.nombre : 'CONSUMIDOR FINAL'}</p>
+                        <p><strong>DNI/RUC:</strong> ${v.cliente?.dni_ruc || '---'}</p>
+                        <p><strong>DIRECCIÓN:</strong> ${v.cliente?.direccion || '---'}</p>
+                    </div>
+                    <div>
+                        <p><strong>FECHA DE EMISIÓN:</strong> ${new Date(v.fecha || Date.now()).toLocaleDateString()}</p>
+                        <p><strong>FECHA DE VENCIMIENTO:</strong> ${new Date(v.fecha || Date.now()).toLocaleDateString()}</p>
+                        <p><strong>MONEDA:</strong> SOLES (S/)</p>
+                    </div>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 10%;">CANT.</th>
+                            <th style="width: 60%;">DESCRIPCIÓN</th>
+                            <th style="width: 15%; text-align: right;">P. UNIT</th>
+                            <th style="width: 15%; text-align: right;">IMPORTE</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${(v.detalles || []).map((d: any) => `
+                            <tr>
+                                <td>${d.cantidad} ${d.unidad || d.producto?.unidad_medida?.abreviatura || ''}</td>
+                                <td>${d.descripcion || (d.producto?.nombre) || ''}</td>
+                                <td style="text-align: right;">${Number(d.precio_unitario || 0).toFixed(2)}</td>
+                                <td style="text-align: right;">${Number(d.subtotal).toFixed(2)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+
+                <div class="totals-container">
+                    <div class="totals-table">
+                        ${Number(v.igv) > 0 ? `
+                            <div><span>Op. Gravada:</span> <span>S/ ${Number(v.subtotal).toFixed(2)}</span></div>
+                            <div><span>I.G.V. (${Number(v.porcentaje_igv || 18)}%):</span> <span>S/ ${Number(v.igv).toFixed(2)}</span></div>
+                        ` : ''}
+                        <div class="grand-total"><span>TOTAL:</span> <span>S/ ${Number(v.total || 0).toFixed(2)}</span></div>
+                    </div>
+                </div>
+
+                <div class="footer">
+                    <p>REPRESENTACIÓN IMPRESA DE UNA BOLETA DE VENTA ELECTRÓNICA</p>
+                    <p>Consulte su documento en: consulta.sunat.gob.pe</p>
+                    <p><strong>¡GRACIAS POR SU PREFERENCIA!</strong></p>
+                </div>
+            </body>
+            </html>
+        `
+        printWindow.document.write(html)
+        printWindow.document.close()
+        setTimeout(() => {
+            printWindow.print()
+        }, 300)
+    }
+
+    const printTicket = (v: any) => {
+        const printWindow = window.open("", "_blank", "width=400,height=600")
+        if (!printWindow) return
+
+        const esCotizacion = !!v.id_cotizacion && !v.id_venta
+        const docNum = v.serie && v.correlativo 
+            ? `${v.serie}-${v.correlativo.toString().padStart(6, '0')}` 
+            : (esCotizacion ? "COT-" : "") + (v.id_venta || v.id_cotizacion || 0).toString().padStart(6, '0')
+        
+        const headerTitle = esCotizacion ? "COTIZACIÓN" : (v.tipo_comprobante?.toUpperCase() || "TICKET DE VENTA")
+
+        const html = `
+            <html>
+            <head>
                 <style>
                     body { 
                         font-family: 'Courier New', Courier, monospace; 
@@ -394,92 +671,76 @@ export default function SalesPage() {
                         padding: 10px; 
                         width: 80mm; 
                         color: #000;
-                        font-size: 12px;
+                        font-size: 13px;
+                        font-weight: bold;
+                        line-height: 1.2;
                     }
                     .text-center { text-align: center; }
                     .text-right { text-align: right; }
-                    .font-bold { font-weight: bold; }
-                    .mb-2 { margin-bottom: 8px; }
-                    .mb-4 { margin-bottom: 16px; }
-                    .mt-4 { margin-top: 16px; }
-                    .border-b { border-bottom: 1px dashed #000; padding-bottom: 4px; margin-bottom: 4px; }
-                    .border-t { border-top: 1px dashed #000; padding-top: 4px; margin-top: 4px; }
-                    
+                    .bold { font-weight: 900; }
+                    .border-t { border-top: 1px dashed #000; margin: 5px 0; }
                     table { width: 100%; border-collapse: collapse; }
-                    th, td { text-align: left; padding: 2px 0; vertical-align: top; }
-                    th { border-bottom: 1px dashed #000; }
-                    
-                    .w-qty { width: 15%; }
-                    .w-desc { width: 55%; }
-                    .w-price { width: 30%; text-align: right; }
-                    
-                    .totals { display: flex; justify-content: space-between; margin-top: 4px; }
+                    .logo { max-width: 100px; max-height: 100px; display: block; margin: 0 auto 5px; }
+                    .doc-header { font-size: 16px; margin-bottom: 5px; border: 1px solid #000; padding: 4px; }
                 </style>
             </head>
             <body>
-                <div class="text-center mb-4">
-                    <h2 style="margin:0; font-size: 16px;">SISTEMA FERRETERÍA</h2>
-                    <div style="font-size: 10px;">${esBoletaFactura ? 'RUC: 10123456789' : 'Ticket No Fiscal'}</div>
-                    <div style="font-size: 10px;">Av. Principal 123, Ciudad</div>
-                </div>
-                
-                <div class="text-center border-b mb-2 font-bold header-title">
-                    ${headerTitle} N° ${docNum}
-                </div>
-                
-                <div class="mb-4 text-xs">
-                    <div>Fecha: ${new Date(v.fecha || Date.now()).toLocaleString()}</div>
-                    ${v.cliente ? `<div>Cliente: ${v.cliente.nombre}</div>` : '<div>Cliente: Consumidor Final</div>'}
-                    ${v.cliente && v.cliente.dni_ruc ? `<div>DNI/RUC: ${v.cliente.dni_ruc}</div>` : ''}
-                    <div>Cajero: ${v.usuario ? v.usuario.nombre : 'Admin'}</div>
+                <div class="text-center">
+                    ${company.logo_url ? `<img src="${company.logo_url}" class="logo" />` : ''}
+                    <div class="bold" style="font-size: 16px; text-transform: uppercase;">${company.nombre}</div>
+                    <div style="font-size: 11px;">RUC: ${company.ruc}</div>
+                    <div style="font-size: 11px;">${company.direccion}</div>
+                    <div style="font-size: 11px;">TEL: ${company.telefono}</div>
+                    <div class="border-t"></div>
+                    <div class="doc-header bold">${headerTitle}</div>
+                    <div class="bold" style="font-size: 14px;">N° ${docNum}</div>
+                    <div class="border-t"></div>
                 </div>
 
-                <table class="mb-2">
+                <div style="font-size: 11px;">
+                    <div>FECHA: ${new Date(v.fecha || Date.now()).toLocaleString()}</div>
+                    <div>CLIENTE: ${v.cliente?.nombre || 'CONSUMIDOR FINAL'}</div>
+                    <div>DNI/RUC: ${v.cliente?.dni_ruc || '---'}</div>
+                </div>
+                <div class="border-t"></div>
+
+                <table>
                     <thead>
-                        <tr>
-                            <th class="w-qty">Cant</th>
-                            <th class="w-desc">Producto</th>
-                            <th class="w-price">Importe</th>
+                        <tr class="bold">
+                            <th align="left" style="font-size: 11px;">DESC.</th>
+                            <th align="center" style="font-size: 11px;">CANT.</th>
+                            <th align="right" style="font-size: 11px;">SUBT.</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${(v.detalles || []).map((d: any) => `
                             <tr>
-                                <td class="w-qty">${d.cantidad}</td>
-                                <td class="w-desc">${d.descripcion || (d.producto?.nombre) || ''}</td>
-                                <td class="w-price">${Number(d.subtotal).toFixed(2)}</td>
+                                <td style="font-size: 11px;">${d.descripcion || d.producto?.nombre}</td>
+                                <td align="center" style="font-size: 11px;">${d.cantidad} ${d.unidad || ''}</td>
+                                <td align="right" style="font-size: 11px;">${Number(d.subtotal).toFixed(2)}</td>
                             </tr>
                         `).join('')}
                     </tbody>
                 </table>
+
+                <div class="border-t"></div>
+                <div class="text-right">
+                    <div style="font-size: 11px;">SUBTOTAL: S/ ${Number(v.subtotal).toFixed(2)}</div>
+                    <div style="font-size: 11px;">IGV (${Number(v.porcentaje_igv || 18)}%): S/ ${Number(v.igv).toFixed(2)}</div>
+                    <div class="bold" style="font-size: 15px;">TOTAL: S/ ${Number(v.total).toFixed(2)}</div>
+                </div>
+                <div class="border-t"></div>
                 
-                <div class="border-t mt-4">
-                    <div class="totals text-xs"><span>Op. Gravada:</span> <span>${Number((v.total || 0) / 1.18).toFixed(2)}</span></div>
-                    <div class="totals text-xs"><span>I.G.V. (18%):</span> <span>${Number((v.total || 0) - ((v.total || 0) / 1.18)).toFixed(2)}</span></div>
-                    <div class="totals font-bold mt-2" style="font-size: 14px;"><span>TOTAL S/:</span> <span>${Number(v.total || 0).toFixed(2)}</span></div>
-                </div>
-
-                <div class="border-t mt-2 pt-2 text-xs">
-                    <div class="totals font-bold"><span>METODO DE PAGO:</span> <span style="text-transform: uppercase;">${v.metodo_pago || 'EFECTIVO'}</span></div>
-                    ${v.metodo_pago === 'mixto' ? `
-                        <div class="totals"><span>- Efectivo:</span> <span>${Number(v.monto_efectivo || 0).toFixed(2)}</span></div>
-                        <div class="totals"><span>- Transferencia:</span> <span>${Number(v.monto_transferencia || 0).toFixed(2)}</span></div>
-                    ` : ''}
-                </div>
-
-                <div class="text-center mt-4 text-xs">
-                    <p>*** GRACIAS POR SU COMPRA ***</p>
+                <div class="text-center" style="margin-top: 10px;">
+                    <div style="font-size: 11px;">MÉTODO: ${v.metodo_pago?.toUpperCase() || 'EFECTIVO'}</div>
+                    <div style="margin-top: 10px; font-size: 11px; font-style: italic;">${company.mensaje_ticket || '¡GRACIAS POR SU COMPRA!'}</div>
                 </div>
             </body>
             </html>
         `
         printWindow.document.write(html)
         printWindow.document.close()
-
-        // Timeout to allow styles to apply before printing
-        setTimeout(() => {
-            printWindow.print()
-        }, 300)
+        setTimeout(() => printWindow.print(), 250)
     }
 
     const filteredProducts = products.filter(p =>
@@ -555,7 +816,12 @@ export default function SalesPage() {
                                                         onClick={() => addToCart(p)}
                                                         className="flex flex-col p-3 rounded-xl bg-slate-300/30 dark:bg-slate-700/30 border border-slate-300 dark:border-slate-600 hover:border-blue-500 transition-all text-left group"
                                                     >
-                                                        <span className="text-sm font-medium text-slate-800 dark:text-slate-200 group-hover:text-slate-900 dark:text-white line-clamp-2 min-h-[2.5rem]">{p.nombre}</span>
+                                                        <div className="flex justify-between items-start">
+                                                            <span className="text-sm font-medium text-slate-800 dark:text-slate-200 group-hover:text-slate-900 dark:text-white line-clamp-2 min-h-[2.5rem]">{p.nombre}</span>
+                                                            {p.precios && p.precios.length > 0 && (
+                                                                <Badge variant="outline" className="text-[9px] px-1 h-4 border-blue-500/50 text-blue-500 shrink-0">Multi</Badge>
+                                                            )}
+                                                        </div>
                                                         <div className="mt-3 flex justify-between items-end">
                                                             <span className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-400">{p.stock_actual} disp.</span>
                                                             <span className="text-lg font-bold text-blue-400">S/ {p.precio_venta}</span>
@@ -584,14 +850,56 @@ export default function SalesPage() {
                                                 <TableBody>
                                                     {cart.map(item => (
                                                         <TableRow key={item.id_producto} className="border-slate-300 dark:border-slate-700 hover:bg-slate-300/20 dark:bg-slate-700/20">
-                                                            <TableCell className="text-sm font-medium">{item.nombre}</TableCell>
-                                                            <TableCell className="text-sm">S/ {item.precio_venta}</TableCell>
+                                                            <TableCell className="text-sm font-medium">
+                                                                <div>{item.nombre}</div>
+                                                                <div className="text-[10px] text-slate-500 mt-1">
+                                                                    {item.precios && item.precios.length > 0 ? (
+                                                                        <Select 
+                                                                            value={item.unidad_seleccionada} 
+                                                                            onValueChange={(val) => {
+                                                                                if (val === item.unidad_medida?.abreviatura) {
+                                                                                    updateUnit(item.id_producto, val, 1, item.precio_venta)
+                                                                                } else {
+                                                                                    const p = item.precios?.find((p: any) => p.unidad_medida?.abreviatura === val || p.nombre === val)
+                                                                                    if (p) updateUnit(item.id_producto, val, Number(p.factor), Number(p.precio))
+                                                                                }
+                                                                            }}
+                                                                        >
+                                                                            <SelectTrigger className="h-6 text-[10px] w-24 bg-slate-100 dark:bg-slate-800 border-none">
+                                                                                <SelectValue />
+                                                                            </SelectTrigger>
+                                                                            <SelectContent className="bg-slate-100 dark:bg-slate-800">
+                                                                                <SelectItem value={item.unidad_medida?.abreviatura || "Und"}>{item.unidad_medida?.abreviatura || "Unidad"}</SelectItem>
+                                                                                {item.precios.map((p: any, i: number) => (
+                                                                                    <SelectItem key={i} value={p.unidad_medida?.abreviatura || p.nombre}>
+                                                                                        {p.nombre} ({p.unidad_medida?.abreviatura})
+                                                                                    </SelectItem>
+                                                                                ))}
+                                                                            </SelectContent>
+                                                                        </Select>
+                                                                    ) : (
+                                                                        <span>Unidad: {item.unidad_medida?.abreviatura || 'Und'}</span>
+                                                                    )}
+                                                                </div>
+                                                            </TableCell>
+                                                            <TableCell className="text-sm">S/ {item.precio_unitario.toFixed(2)}</TableCell>
                                                             <TableCell>
                                                                 <div className="flex items-center justify-center gap-3">
-                                                                    <button onClick={() => updateQuantity(item.id_producto, -1)} className="w-6 h-6 rounded flex items-center justify-center bg-slate-200 dark:bg-slate-700 hover:bg-slate-600">-</button>
-                                                                    <span className="w-8 text-center">{item.cantidad}</span>
-                                                                    <button onClick={() => updateQuantity(item.id_producto, 1)} className="w-6 h-6 rounded flex items-center justify-center bg-slate-200 dark:bg-slate-700 hover:bg-slate-600">+</button>
+                                                                    <button onClick={() => updateQuantity(item.id_producto, -1)} className="w-8 h-8 rounded-lg flex items-center justify-center bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors">-</button>
+                                                                    <Input
+                                                                        type="number"
+                                                                        min="1"
+                                                                        value={item.cantidad}
+                                                                        onChange={(e) => updateQuantity(item.id_producto, 0, parseFloat(e.target.value) || 0)}
+                                                                        className="w-20 text-center h-8 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700"
+                                                                    />
+                                                                    <button onClick={() => updateQuantity(item.id_producto, 1)} className="w-8 h-8 rounded-lg flex items-center justify-center bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors">+</button>
                                                                 </div>
+                                                                {item.factor_seleccionado > 1 && (
+                                                                    <div className="text-[10px] text-center text-slate-500 mt-1">
+                                                                        Equivale a {item.cantidad * item.factor_seleccionado} {item.unidad_medida?.abreviatura}
+                                                                    </div>
+                                                                )}
                                                             </TableCell>
                                                             <TableCell className="text-right font-medium">S/ {item.subtotal.toFixed(2)}</TableCell>
                                                             <TableCell className="text-right">
@@ -620,7 +928,7 @@ export default function SalesPage() {
                                                     <span>S/ {subtotalGeneral.toFixed(2)}</span>
                                                 </div>
                                                 <div className="flex justify-between text-slate-400 dark:text-slate-500 dark:text-slate-400">
-                                                    <span>IGV (18%)</span>
+                                                    <span>IGV ({selectedCompType?.porcentaje_igv || 18}%)</span>
                                                     <span>S/ {igv.toFixed(2)}</span>
                                                 </div>
                                                 <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-between items-end">
@@ -629,32 +937,6 @@ export default function SalesPage() {
                                                 </div>
                                             </div>
 
-                                            <div className="space-y-3">
-                                                <Label className="text-slate-400 dark:text-slate-500 dark:text-slate-400 font-bold">Tipo de Comprobante</Label>
-                                                <div className="grid grid-cols-3 gap-2">
-                                                    <Button
-                                                        variant="outline"
-                                                        onClick={() => setTipoComprobante("Ticket")}
-                                                        className={`border-slate-300 dark:border-slate-700 h-10 ${tipoComprobante === 'Ticket' ? 'border-purple-500 text-purple-600 bg-purple-500/5 dark:text-purple-400' : 'text-slate-500 bg-transparent'}`}
-                                                    >
-                                                        Ticket
-                                                    </Button>
-                                                    <Button
-                                                        variant="outline"
-                                                        onClick={() => setTipoComprobante("Boleta")}
-                                                        className={`border-slate-300 dark:border-slate-700 h-10 ${tipoComprobante === 'Boleta' ? 'border-purple-500 text-purple-600 bg-purple-500/5 dark:text-purple-400' : 'text-slate-500 bg-transparent'}`}
-                                                    >
-                                                        Boleta
-                                                    </Button>
-                                                    <Button
-                                                        variant="outline"
-                                                        onClick={() => setTipoComprobante("Factura")}
-                                                        className={`border-slate-300 dark:border-slate-700 h-10 ${tipoComprobante === 'Factura' ? 'border-purple-500 text-purple-600 bg-purple-500/5 dark:text-purple-400' : 'text-slate-500 bg-transparent'}`}
-                                                    >
-                                                        Factura
-                                                    </Button>
-                                                </div>
-                                            </div>
 
                                             <div className="space-y-2 relative">
                                                 <Label className="text-slate-400 dark:text-slate-500 dark:text-slate-400">Cliente (Opcional)</Label>
@@ -755,6 +1037,23 @@ export default function SalesPage() {
                                             {activeTab === "pos" ? (
                                                 <>
                                                     <div className="space-y-3">
+                                                        <Label className="text-slate-400 dark:text-slate-500 dark:text-slate-400 font-bold">Tipo de Documento</Label>
+                                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                                            {comprobantes.map((comp) => (
+                                                                <Button
+                                                                    key={comp.id}
+                                                                    variant={selectedCompType?.id === comp.id ? "default" : "outline"}
+                                                                    className={`h-auto flex-col py-2 gap-1 ${selectedCompType?.id === comp.id ? "bg-blue-600 hover:bg-blue-700 font-bold" : "border-slate-300 dark:border-slate-700"}`}
+                                                                    onClick={() => setSelectedCompType(comp)}
+                                                                >
+                                                                    <span className="font-bold">{comp.nombre}</span>
+                                                                    <span className="text-[9px] opacity-70 font-normal">{comp.serie || 'S001'} | {comp.aplica_igv ? `IGV ${comp.porcentaje_igv}%` : 'S/ IGV'}</span>
+                                                                </Button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="space-y-3">
                                                         <Label className="text-slate-400 dark:text-slate-500 dark:text-slate-400">Método de Pago</Label>
                                                         <div className="grid grid-cols-3 gap-2">
                                                             <Button
@@ -809,6 +1108,26 @@ export default function SalesPage() {
                                                         )}
                                                     </div>
 
+                                                    <div className="space-y-3">
+                                                        <Label className="text-slate-400 dark:text-slate-500 dark:text-slate-400 font-bold">Formato de Impresión</Label>
+                                                        <div className="grid grid-cols-2 gap-2">
+                                                            <Button
+                                                                variant="outline"
+                                                                onClick={() => setPrintFormat("Ticket")}
+                                                                className={`border-slate-300 dark:border-slate-700 h-10 ${printFormat === 'Ticket' ? 'border-orange-500 text-orange-600 bg-orange-500/5 dark:text-orange-400' : 'text-slate-500 bg-transparent'}`}
+                                                            >
+                                                                Ticket
+                                                            </Button>
+                                                            <Button
+                                                                variant="outline"
+                                                                onClick={() => setPrintFormat("A4")}
+                                                                className={`border-slate-300 dark:border-slate-700 h-10 ${printFormat === 'A4' ? 'border-orange-500 text-orange-600 bg-orange-500/5 dark:text-orange-400' : 'text-slate-500 bg-transparent'}`}
+                                                            >
+                                                                Tamaño A4
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+
                                                     <Button
                                                         onClick={finalizeSale}
                                                         disabled={cart.length === 0 || loading || (paymentType === "Mixto" && Math.abs((montoEfectivo + montoTransferencia) - total) > 0.01)}
@@ -819,13 +1138,31 @@ export default function SalesPage() {
                                                     </Button>
                                                 </>
                                             ) : (
-                                                <Button
-                                                    onClick={createCotizacion}
-                                                    disabled={cart.length === 0 || loading}
-                                                    className="w-full h-16 text-lg font-bold bg-purple-600 hover:bg-purple-700 shadow-xl shadow-purple-900/20"
-                                                >
-                                                    {loading ? "Guardando..." : "GUARDAR COTIZACIÓN"}
-                                                </Button>
+                                                <>
+                                                    <Button
+                                                        onClick={createCotizacion}
+                                                        disabled={cart.length === 0 || loading}
+                                                        className="w-full h-16 text-lg font-bold bg-purple-600 hover:bg-purple-700 shadow-xl shadow-purple-900/20"
+                                                    >
+                                                        {loading ? "Guardando..." : "GUARDAR COTIZACIÓN"}
+                                                    </Button>
+                                                    <div className="grid grid-cols-2 gap-2 mt-3">
+                                                        <Button
+                                                            variant="outline"
+                                                            onClick={() => setPrintFormat("Ticket")}
+                                                            className={`border-slate-300 dark:border-slate-700 h-10 ${printFormat === 'Ticket' ? 'border-orange-500 text-orange-600 bg-orange-500/5 dark:text-orange-400 font-bold' : 'text-slate-500 bg-transparent'}`}
+                                                        >
+                                                            Facturar en Ticket
+                                                        </Button>
+                                                        <Button
+                                                            variant="outline"
+                                                            onClick={() => setPrintFormat("A4")}
+                                                            className={`border-slate-300 dark:border-slate-700 h-10 ${printFormat === 'A4' ? 'border-orange-500 text-orange-600 bg-orange-500/5 dark:text-orange-400 font-bold' : 'text-slate-500 bg-transparent'}`}
+                                                        >
+                                                            Facturar en A4
+                                                        </Button>
+                                                    </div>
+                                                </>
                                             )}
                                         </CardContent>
                                     </Card>
@@ -834,8 +1171,26 @@ export default function SalesPage() {
 
                             <TabsContent value="quotes_list" className="flex-1 mt-0 h-full data-[state=active]:flex flex-col overflow-hidden">
                                 <Card className="flex-1 flex flex-col bg-slate-200/50 dark:bg-slate-800/50 border-slate-300 dark:border-slate-700 overflow-hidden">
-                                    <CardHeader className="pb-4 shrink-0">
+                                    <CardHeader className="pb-4 shrink-0 flex flex-row items-center justify-between">
                                         <CardTitle className="text-purple-600">Listado de Cotizaciones</CardTitle>
+                                        <div className="flex gap-2 bg-slate-100 dark:bg-slate-900 p-1 rounded-lg border border-slate-300 dark:border-slate-700">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => setPrintFormat("Ticket")}
+                                                className={`h-8 px-3 text-xs ${printFormat === 'Ticket' ? 'bg-white dark:bg-slate-800 shadow-sm text-orange-500' : 'text-slate-500'}`}
+                                            >
+                                                Ticket
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => setPrintFormat("A4")}
+                                                className={`h-8 px-3 text-xs ${printFormat === 'A4' ? 'bg-white dark:bg-slate-800 shadow-sm text-orange-500' : 'text-slate-500'}`}
+                                            >
+                                                A4
+                                            </Button>
+                                        </div>
                                     </CardHeader>
                                     <CardContent className="flex-1 overflow-auto p-0">
                                         <Table>
@@ -865,10 +1220,19 @@ export default function SalesPage() {
                                                             </TableCell>
                                                             <TableCell className="text-right font-medium text-purple-500">S/ {c.total}</TableCell>
                                                             <TableCell className="text-center">
-                                                                <div className="flex justify-center gap-2">
-                                                                    <Button variant="outline" size="sm" onClick={() => printCotizacion(c)}>Imprimir</Button>
+                                                                <div className="flex flex-col gap-2 scale-90">
+                                                                    <div className="flex gap-1 justify-center">
+                                                                        <Button variant="outline" size="sm" onClick={() => {
+                                                                            setPrintFormat("Ticket")
+                                                                            setTimeout(() => printCotizacion(c), 50)
+                                                                        }} className="px-2 h-7 text-[10px]">Ticket</Button>
+                                                                        <Button variant="outline" size="sm" onClick={() => {
+                                                                            setPrintFormat("A4")
+                                                                            setTimeout(() => printCotizacion(c), 50)
+                                                                        }} className="px-2 h-7 text-[10px]">A4</Button>
+                                                                    </div>
                                                                     {c.estado === 'pendiente' && (
-                                                                        <Button variant="default" size="sm" onClick={() => loadQuoteToPos(c)} className="bg-green-600 hover:bg-green-700 text-white">Proceder Venta</Button>
+                                                                        <Button variant="default" size="sm" onClick={() => loadQuoteToPos(c)} className="bg-green-600 hover:bg-green-700 text-white h-8">Vender</Button>
                                                                     )}
                                                                 </div>
                                                             </TableCell>
@@ -926,15 +1290,32 @@ export default function SalesPage() {
                                             </TableHeader>
                                             <TableBody>
                                                 {historyLoading ? (
-                                                    <TableRow><TableCell colSpan={6} className="text-center py-6 text-slate-500">Cargando...</TableCell></TableRow>
+                                                    <TableRow>
+                                                        <TableCell colSpan={6} className="text-center py-8">
+                                                            <div className="flex flex-col items-center gap-2">
+                                                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                                                                <span className="text-sm text-slate-500">Cargando ventas...</span>
+                                                            </div>
+                                                        </TableCell>
+                                                    </TableRow>
                                                 ) : filteredVentas.length === 0 ? (
-                                                    <TableRow><TableCell colSpan={6} className="text-center py-6 text-slate-500">No se encontraron ventas.</TableCell></TableRow>
+                                                    <TableRow><TableCell colSpan={6} className="text-center py-8 text-slate-500">No se encontraron ventas.</TableCell></TableRow>
                                                 ) : (
                                                     filteredVentas.map((v) => (
                                                         <TableRow key={v.id_venta} className="border-slate-300 dark:border-slate-700 hover:bg-slate-300/20 dark:bg-slate-700/20">
                                                             <TableCell className="font-medium">{new Date(v.fecha).toLocaleString()}</TableCell>
+                                                            <TableCell className="font-mono font-bold text-slate-400 dark:text-slate-500">
+                                                                {v.serie && v.correlativo 
+                                                                    ? `${v.serie}-${v.correlativo.toString().padStart(6, '0')}`
+                                                                    : `#${v.id_venta.toString().padStart(6, '0')}`
+                                                                }
+                                                            </TableCell>
                                                             <TableCell>{v.cliente?.nombre || 'Consumidor Final'}</TableCell>
-                                                            <TableCell className="capitalize">{v.tipo}</TableCell>
+                                                            <TableCell>
+                                                                <Badge variant="outline" className="bg-slate-100 dark:bg-slate-800 uppercase text-[10px]">
+                                                                    {v.tipo_comprobante || 'Ticket'}
+                                                                </Badge>
+                                                            </TableCell>
                                                             <TableCell className="text-right font-medium text-blue-500">S/ {v.total}</TableCell>
                                                             <TableCell className="text-center">
                                                                 <Badge variant="outline" className="border-green-500 text-green-500">{v.estado}</Badge>
@@ -1002,7 +1383,7 @@ export default function SalesPage() {
                                                     <div>
                                                         <span className="text-slate-500 block mb-1">Tipo de Comprobante</span>
                                                         <Badge variant="outline" className="capitalize border-purple-500 text-purple-600">
-                                                            {selectedSaleDetail?.tipo_comprobante || 'Ticket'}
+                                                            {selectedSaleDetail?.tipo_comprobante || 'Recibo'}
                                                         </Badge>
                                                     </div>
                                                 </div>

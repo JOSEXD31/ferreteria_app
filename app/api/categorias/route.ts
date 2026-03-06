@@ -1,8 +1,20 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { z } from "zod"
+import { getSession } from "@/lib/auth"
+
+const categoriaSchema = z.object({
+  nombre: z.string().min(1, "El nombre es obligatorio"),
+  descripcion: z.string().optional().nullable(),
+})
 
 export async function GET() {
   try {
+    const session = await getSession()
+    if (!session) {
+      return NextResponse.json({ message: "No autorizado" }, { status: 401 })
+    }
+
     const categorias = await prisma.categoria.findMany({
       where: { estado: 1 },
       orderBy: { nombre: "asc" },
@@ -16,12 +28,19 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
-    const { nombre, descripcion } = body
-
-    if (!nombre) {
-      return NextResponse.json({ message: "El nombre es obligatorio" }, { status: 400 })
+    const session = await getSession()
+    if (!session) {
+      return NextResponse.json({ message: "No autorizado" }, { status: 401 })
     }
+
+    const body = await request.json()
+    const validation = categoriaSchema.safeParse(body)
+
+    if (!validation.success) {
+      return NextResponse.json({ message: "Datos inválidos", errors: validation.error.format() }, { status: 400 })
+    }
+
+    const { nombre, descripcion } = validation.data
 
     const nuevaCategoria = await prisma.categoria.create({
       data: {
@@ -40,12 +59,24 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    const body = await request.json()
-    const { id_categoria, nombre, descripcion } = body
-
-    if (!id_categoria || !nombre) {
-      return NextResponse.json({ message: "ID y nombre son obligatorios" }, { status: 400 })
+    const session = await getSession()
+    if (!session) {
+      return NextResponse.json({ message: "No autorizado" }, { status: 401 })
     }
+
+    const body = await request.json()
+    const { id_categoria, ...rest } = body
+    
+    if (!id_categoria) {
+      return NextResponse.json({ message: "ID es obligatorio" }, { status: 400 })
+    }
+
+    const validation = categoriaSchema.safeParse(rest)
+    if (!validation.success) {
+      return NextResponse.json({ message: "Datos inválidos", errors: validation.error.format() }, { status: 400 })
+    }
+
+    const { nombre, descripcion } = validation.data
 
     const categoriaActualizada = await prisma.categoria.update({
       where: { id_categoria: parseInt(id_categoria) },
@@ -64,6 +95,11 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const session = await getSession()
+    if (!session) {
+      return NextResponse.json({ message: "No autorizado" }, { status: 401 })
+    }
+
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
 
@@ -82,3 +118,4 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ message: "Error al desactivar categoría" }, { status: 500 })
   }
 }
+

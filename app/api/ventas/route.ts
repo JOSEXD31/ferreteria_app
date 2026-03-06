@@ -1,8 +1,37 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { z } from "zod"
+import { getSession } from "@/lib/auth"
+
+const saleSchema = z.object({
+  id_cliente: z.union([z.number(), z.string(), z.null()]).optional().transform(v => typeof v === 'string' ? parseInt(v) : v),
+  id_usuario: z.union([z.number(), z.string(), z.null()]).optional().transform(v => typeof v === 'string' ? parseInt(v) : v),
+  tipo: z.enum(["producto", "servicio"]).optional().default("producto"),
+  subtotal: z.number(),
+  igv: z.number(),
+  total: z.number(),
+  metodo_pago: z.enum(["efectivo", "transferencia", "mixto"]),
+  tipo_comprobante: z.string(),
+  monto_efectivo: z.number().optional().default(0),
+  monto_transferencia: z.number().optional().default(0),
+  detalles: z.array(z.object({
+    id_producto: z.number(),
+    descripcion: z.string(),
+    cantidad: z.number(),
+    precio_unitario: z.number(),
+    subtotal: z.number(),
+    unidad: z.string().optional().nullable(),
+    factor: z.number().optional().default(1),
+  }))
+})
 
 export async function GET() {
   try {
+    const session = await getSession()
+    if (!session) {
+      return NextResponse.json({ message: "No autorizado" }, { status: 401 })
+    }
+
     const ventas = await prisma.venta.findMany({
       include: {
         cliente: true,
@@ -24,7 +53,21 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
+    const session = await getSession()
+    if (!session) {
+      return NextResponse.json({ message: "No autorizado" }, { status: 401 })
+    }
+
+    const rawBody = await request.json()
+    const validation = saleSchema.safeParse(rawBody)
+
+    if (!validation.success) {
+      return NextResponse.json({ 
+        message: "Datos de venta inválidos", 
+        errors: validation.error.format() 
+      }, { status: 400 })
+    }
+
     const {
       id_cliente,
       id_usuario,
@@ -37,36 +80,61 @@ export async function POST(request: Request) {
       tipo_comprobante,
       monto_efectivo,
       monto_transferencia
-    } = body
-
-    if (!detalles || detalles.length === 0) {
-      return NextResponse.json({ message: "La venta debe tener al menos un producto" }, { status: 400 })
-    }
+    } = validation.data
 
     const result = await prisma.$transaction(async (tx) => {
+
+      // 1. Buscar configuración de comprobante si aplica
+      let serieFinal = null
+      let correlativoFinal = null
+      
+      const configDoc = await tx.configuracion_comprobante.findFirst({
+        where: { 
+          nombre: tipo_comprobante,
+          activo: true 
+        }
+      })
+
+      if (configDoc) {
+        serieFinal = configDoc.serie
+        correlativoFinal = configDoc.correlativo
+        
+        // Incrementar correlativo para el siguiente
+        await tx.configuracion_comprobante.update({
+          where: { id: configDoc.id },
+          data: { correlativo: { increment: 1 } }
+        })
+      }
+
       // 1. Crear la venta
       const venta = await tx.venta.create({
         data: {
-          id_cliente: id_cliente ? parseInt(id_cliente) : null,
-          id_usuario: id_usuario ? parseInt(id_usuario) : null,
-          tipo: tipo || "producto",
-          subtotal: subtotal ? parseFloat(subtotal) : 0,
-          igv: igv ? parseFloat(igv) : 0,
-          total: total ? parseFloat(total) : 0,
+          id_cliente: id_cliente,
+          id_usuario: id_usuario,
+          tipo: (tipo || "producto") as any,
+          subtotal: subtotal,
+          igv: igv,
+          total: total,
           estado: "pagado",
-          metodo_pago: metodo_pago ? metodo_pago.toLowerCase() : "efectivo",
-          tipo_comprobante: tipo_comprobante ? tipo_comprobante.toLowerCase() : "ticket",
-          monto_efectivo: monto_efectivo ? parseFloat(monto_efectivo) : (metodo_pago === 'Efectivo' ? parseFloat(total) : 0),
-          monto_transferencia: monto_transferencia ? parseFloat(monto_transferencia) : (metodo_pago === 'Transferencia' ? parseFloat(total) : 0),
+          metodo_pago: metodo_pago.toLowerCase() as any,
+          tipo_comprobante: tipo_comprobante.toLowerCase() as any,
+          monto_efectivo: monto_efectivo,
+          monto_transferencia: monto_transferencia,
+          serie: serieFinal,
+          correlativo: correlativoFinal,
+          porcentaje_igv: configDoc ? parseFloat(configDoc.porcentaje_igv.toString()) : 18,
           detalles: {
             create: detalles.map((d: any) => ({
-              id_producto: d.id_producto ? parseInt(d.id_producto) : null,
+              id_producto: d.id_producto,
               descripcion: d.descripcion,
-              cantidad: parseFloat(d.cantidad),
-              precio_unitario: parseFloat(d.precio_unitario),
-              subtotal: parseFloat(d.subtotal),
-            }))
+               cantidad: d.cantidad,
+               precio_unitario: d.precio_unitario,
+               subtotal: d.subtotal,
+               unidad: d.unidad,
+               factor: d.factor,
+             }))
           }
+
         },
         include: {
           detalles: {
@@ -79,15 +147,15 @@ export async function POST(request: Request) {
         }
       })
 
-      // 2. Actualizar stock y registrar movimientos para cada detalle
-      for (const d of venta.detalles) {
+      const detailsToProcess = [...venta.detalles]
+      for (const d of detailsToProcess) {
         if (d.id_producto) {
           // Actualizar stock
           await tx.producto.update({
             where: { id_producto: d.id_producto },
             data: {
               stock_actual: {
-                decrement: d.cantidad
+                decrement: Number(d.cantidad || 0) * (d.factor ? Number(d.factor) : 1)
               }
             }
           })
@@ -97,7 +165,7 @@ export async function POST(request: Request) {
             data: {
               id_producto: d.id_producto,
               tipo: "venta",
-              cantidad: d.cantidad.mul(-1),
+              cantidad: (Number(d.cantidad) * (d.factor ? Number(d.factor) : 1)) * -1,
               precio_unitario: d.precio_unitario,
               referencia: `Venta ID: ${venta.id_venta}`,
             }

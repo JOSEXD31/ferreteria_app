@@ -16,6 +16,8 @@ export const metadata: Metadata = {
   generator: 'Hairo'
 }
 
+import ErrorBoundary from "@/components/error-boundary"
+
 export default function RootLayout({
   children,
 }: {
@@ -23,7 +25,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" suppressHydrationWarning>
-
       <body className={inter.className}>
         <ThemeProvider
           attribute="class"
@@ -32,12 +33,15 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <EmpresaProvider>
-            <ThemeToggle />
-            {children}
-            <ToastContainer />
+            <ErrorBoundary>
+              <ThemeToggle />
+              {children}
+              <ToastContainer />
+            </ErrorBoundary>
           </EmpresaProvider>
         </ThemeProvider>
       </body>
     </html>
   )
 }
+
