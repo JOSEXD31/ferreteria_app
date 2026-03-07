@@ -46,26 +46,36 @@ export default function ReportsPage() {
             title: "Stock e Inventario",
             description: "Valorización de almacén",
             icon: <Package className="w-8 h-8 text-blue-500" />
+        },
+        {
+            id: "caja",
+            title: "Resumen de Caja",
+            description: "Análisis financiero",
+            icon: <BarChart3 className="w-8 h-8 text-orange-500" />
         }
     ]
 
     const getFilterRange = () => {
         const today = new Date()
+        const offset = today.getTimezoneOffset() * 60000
+        const localDate = new Date(today.getTime() - offset).toISOString().split('T')[0]
+
         let desde = ""
         let hasta = ""
 
         if (selectedDateRange === "hoy") {
-            desde = today.toISOString().split('T')[0]
-            hasta = today.toISOString().split('T')[0]
+            desde = localDate
+            hasta = localDate
         } else if (selectedDateRange === "ayer") {
             const yesterday = new Date(today)
             yesterday.setDate(yesterday.getDate() - 1)
-            desde = yesterday.toISOString().split('T')[0]
-            hasta = yesterday.toISOString().split('T')[0]
+            const yesterdayLocal = new Date(yesterday.getTime() - offset).toISOString().split('T')[0]
+            desde = yesterdayLocal
+            hasta = yesterdayLocal
         } else if (selectedDateRange === "este_mes") {
             const firstDay = new Date(today.getFullYear(), today.getMonth(), 1)
-            desde = firstDay.toISOString().split('T')[0]
-            hasta = today.toISOString().split('T')[0]
+            desde = new Date(firstDay.getTime() - offset).toISOString().split('T')[0]
+            hasta = localDate
         } else if (selectedDateRange === "personalizado") {
             desde = customDesde
             hasta = customHasta
@@ -122,7 +132,7 @@ export default function ReportsPage() {
                 v.id_venta,
                 new Date(v.fecha).toLocaleDateString(),
                 v.cliente?.nombre || "Consumidor Final",
-                v.tipo_comprobante || "Ticket",
+                v.tipo_comprobante === 'ticket' ? 'Recibo' : (v.tipo_comprobante || "Recibo"),
                 v.metodo_pago || "Efectivo",
                 `S/ ${Number(v.total).toFixed(2)}`
             ])
@@ -131,7 +141,7 @@ export default function ReportsPage() {
             rows = data.map(c => [
                 c.id_compra,
                 new Date(c.fecha).toLocaleDateString(),
-                c.proveedor?.nombre_comercial || "N/A",
+                c.proveedor?.nombre || "N/A",
                 `S/ ${Number(c.total).toFixed(2)}`
             ])
         } else if (type === "inventario") {
@@ -143,6 +153,16 @@ export default function ReportsPage() {
                 `S/ ${Number(p.precio_compra).toFixed(2)}`,
                 `S/ ${Number(p.precio_venta).toFixed(2)}`,
                 `S/ ${(Number(p.stock_actual) * Number(p.precio_compra)).toFixed(2)}`
+            ])
+        } else if (type === "caja") {
+            columns = ["ID", "Fecha", "M. Inicial", "Ingresos", "Egresos", "M. Final"]
+            rows = data.map(c => [
+                c.id_caja,
+                new Date(c.fecha).toLocaleDateString(),
+                `S/ ${Number(c.monto_inicial).toFixed(2)}`,
+                `S/ ${Number(c.total_ingresos).toFixed(2)}`,
+                `S/ ${Number(c.total_egresos).toFixed(2)}`,
+                `S/ ${Number(c.monto_final).toFixed(2)}`
             ])
         }
 
@@ -197,7 +217,7 @@ export default function ReportsPage() {
                     id: v.id_venta,
                     fecha: new Date(v.fecha).toLocaleString(),
                     cliente: v.cliente?.nombre || "Consumidor Final",
-                    comprobante: v.tipo_comprobante || "Ticket",
+                    comprobante: v.tipo_comprobante === 'ticket' ? 'Recibo' : (v.tipo_comprobante || "Recibo"),
                     pago: v.metodo_pago || "Efectivo",
                     total: Number(v.total)
                 })
@@ -216,7 +236,7 @@ export default function ReportsPage() {
                 const row = worksheet.addRow({
                     id: c.id_compra,
                     fecha: new Date(c.fecha).toLocaleString(),
-                    proveedor: c.proveedor?.nombre_comercial || "N/A",
+                    proveedor: c.proveedor?.nombre || "N/A",
                     total: Number(c.total)
                 })
                 row.getCell('total').numFmt = '0.00'
@@ -244,6 +264,31 @@ export default function ReportsPage() {
                 row.getCell('precio_compra').numFmt = '0.00'
                 row.getCell('precio_venta').numFmt = '0.00'
                 row.getCell('valor').numFmt = '0.00'
+            })
+        } else if (type === "caja") {
+            columnsData = [
+                { header: "ID Caja", key: "id", width: 12 },
+                { header: "Fecha", key: "fecha", width: 25 },
+                { header: "Monto Inicial", key: "inicial", width: 18 },
+                { header: "Total Ingresos", key: "ingresos", width: 18 },
+                { header: "Total Egresos", key: "egresos", width: 18 },
+                { header: "Monto Final", key: "final", width: 18 }
+            ]
+            worksheet.columns = columnsData
+
+            data.forEach(c => {
+                const row = worksheet.addRow({
+                    id: c.id_caja,
+                    fecha: new Date(c.fecha).toLocaleString(),
+                    inicial: Number(c.monto_inicial),
+                    ingresos: Number(c.total_ingresos),
+                    egresos: Number(c.total_egresos),
+                    final: Number(c.monto_final)
+                })
+                row.getCell('inicial').numFmt = '0.00'
+                row.getCell('ingresos').numFmt = '0.00'
+                row.getCell('egresos').numFmt = '0.00'
+                row.getCell('final').numFmt = '0.00'
             })
         }
 
@@ -284,8 +329,9 @@ export default function ReportsPage() {
 
             if (selectedReport === "ventas") {
                 const res = await fetch("/api/ventas")
+                if (!res.ok) throw new Error("Error al obtener ventas")
                 const allSales = await res.json()
-                data = allSales
+                data = Array.isArray(allSales) ? allSales : []
                 if (filter.desde && filter.desde !== "") data = data.filter((v: any) => new Date(v.fecha) >= new Date(filter.desde + "T00:00:00"))
                 if (filter.hasta && filter.hasta !== "") {
                     const toDate = new Date(filter.hasta + "T23:59:59")
@@ -293,17 +339,24 @@ export default function ReportsPage() {
                 }
             } else if (selectedReport === "compras") {
                 const res = await fetch("/api/compras")
+                if (!res.ok) throw new Error("Error al obtener compras")
                 const allPurchases = await res.json()
-                data = allPurchases
+                data = Array.isArray(allPurchases) ? allPurchases : []
                 if (filter.desde && filter.desde !== "") data = data.filter((c: any) => new Date(c.fecha) >= new Date(filter.desde + "T00:00:00"))
                 if (filter.hasta && filter.hasta !== "") {
                     const toDate = new Date(filter.hasta + "T23:59:59")
                     data = data.filter((c: any) => new Date(c.fecha) <= toDate)
                 }
-            } else if (selectedReport === "inventario") {
-                const res = await fetch("/api/productos")
-                const allProducts = await res.json()
-                data = allProducts
+            } else if (selectedReport === "caja") {
+                const res = await fetch("/api/caja")
+                if (!res.ok) throw new Error("Error al obtener datos de caja")
+                const allCajas = await res.json()
+                data = Array.isArray(allCajas) ? allCajas : []
+                if (filter.desde && filter.desde !== "") data = data.filter((c: any) => new Date(c.fecha) >= new Date(filter.desde + "T00:00:00"))
+                if (filter.hasta && filter.hasta !== "") {
+                    const toDate = new Date(filter.hasta + "T23:59:59")
+                    data = data.filter((c: any) => new Date(c.fecha) <= toDate)
+                }
             }
 
             if (!data || data.length === 0) {
@@ -343,8 +396,8 @@ export default function ReportsPage() {
                     aVal = a.cliente?.nombre || ""
                     bVal = b.cliente?.nombre || ""
                 } else if (selectedReport === "compras" && sortConfig.key === "proveedor") {
-                    aVal = a.proveedor?.nombre_comercial || ""
-                    bVal = b.proveedor?.nombre_comercial || ""
+                    aVal = a.proveedor?.nombre || ""
+                    bVal = b.proveedor?.nombre || ""
                 }
 
                 if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1
@@ -413,6 +466,14 @@ export default function ReportsPage() {
             { key: "fecha", label: "Fecha" },
             { key: "proveedor", label: "Proveedor" },
             { key: "total", label: "Total (S/)" }
+        ]
+        if (selectedReport === "caja") return [
+            { key: "id_caja", label: "ID" },
+            { key: "fecha", label: "Fecha" },
+            { key: "monto_inicial", label: "M. Inicial" },
+            { key: "total_ingresos", label: "Ingresos" },
+            { key: "total_egresos", label: "Egresos" },
+            { key: "monto_final", label: "M. Final" }
         ]
         return [
             { key: "id_producto", label: "ID" },
@@ -569,9 +630,10 @@ export default function ReportsPage() {
                                                             {getColumns().map((col) => {
                                                                 let val = row[col.key]
                                                                 if (col.key === 'fecha') val = new Date(val).toLocaleDateString()
+                                                                if (col.key === 'tipo_comprobante') val = row.tipo_comprobante === 'ticket' ? 'Recibo' : (row.tipo_comprobante || 'Recibo')
                                                                 if (col.key === 'cliente') val = row.cliente?.nombre || 'Consumidor Final'
-                                                                if (col.key === 'proveedor') val = row.proveedor?.nombre_comercial || 'N/A'
-                                                                if (col.key === 'total' || col.key === 'precio_compra' || col.key === 'precio_venta') val = `S/ ${Number(val).toFixed(2)}`
+                                                                if (col.key === 'proveedor') val = row.proveedor?.nombre || 'N/A'
+                                                                if (col.key === 'total' || col.key === 'precio_compra' || col.key === 'precio_venta' || col.key === 'monto_inicial' || col.key === 'total_ingresos' || col.key === 'total_egresos' || col.key === 'monto_final') val = `S/ ${Number(val).toFixed(2)}`
                                                                 if (col.key === 'valor_total') val = `S/ ${(Number(row.stock_actual) * Number(row.precio_compra)).toFixed(2)}`
                                                                 return (
                                                                     <td key={col.key} className="px-6 py-4">

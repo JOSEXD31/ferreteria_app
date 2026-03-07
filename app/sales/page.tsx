@@ -322,7 +322,10 @@ export default function SalesPage() {
                 body: JSON.stringify(payload)
             })
 
-            if (!res.ok) throw new Error("Error en la venta")
+            if (!res.ok) {
+                const errData = await res.json()
+                throw new Error(errData.message || "Error en la venta")
+            }
 
             const ventaConfirmada = await res.json()
             toast.success("Venta realizada con éxito")
@@ -338,9 +341,10 @@ export default function SalesPage() {
             setSelectedClient(null)
             setClientSearch("")
             fetchProducts()
-            fetchVentas()
-        } catch (error) {
-            toast.error("Error al procesar la venta")
+        } catch (error: any) {
+            console.error("Venta error:", error)
+            const detail = error.message || "Error al procesar la venta"
+            toast.error(detail)
         } finally {
             setLoading(false)
         }
@@ -373,7 +377,10 @@ export default function SalesPage() {
                 })
             })
 
-            if (!res.ok) throw new Error("Error")
+            if (!res.ok) {
+                const errData = await res.json()
+                throw new Error(errData.message || "Error al guardar cotización")
+            }
             const cotizacionConfirmada = await res.json()
             toast.success("Cotización guardada con éxito")
             
@@ -780,14 +787,14 @@ export default function SalesPage() {
                                 <TabsTrigger value="pos" className="data-[state=active]:bg-blue-50 dark:data-[state=active]:bg-slate-800 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400 data-[state=active]:shadow-none text-slate-500 px-3 py-2 md:px-4 md:py-2 rounded-lg transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50 bg-transparent text-sm font-medium">
                                     Punto de Venta
                                 </TabsTrigger>
+                                <TabsTrigger value="history" className="data-[state=active]:bg-blue-50 dark:data-[state=active]:bg-slate-800 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400 data-[state=active]:shadow-none text-slate-500 px-3 py-2 md:px-4 md:py-2 rounded-lg transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50 bg-transparent text-sm font-medium">
+                                    Historial
+                                </TabsTrigger>
                                 <TabsTrigger value="quote" className="data-[state=active]:bg-blue-50 dark:data-[state=active]:bg-slate-800 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400 data-[state=active]:shadow-none text-slate-500 px-3 py-2 md:px-4 md:py-2 rounded-lg transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50 bg-transparent text-sm font-medium">
                                     Nueva Cotización
                                 </TabsTrigger>
                                 <TabsTrigger value="quotes_list" className="data-[state=active]:bg-blue-50 dark:data-[state=active]:bg-slate-800 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400 data-[state=active]:shadow-none text-slate-500 px-3 py-2 md:px-4 md:py-2 rounded-lg transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50 bg-transparent text-sm font-medium">
                                     Cotizaciones
-                                </TabsTrigger>
-                                <TabsTrigger value="history" className="data-[state=active]:bg-blue-50 dark:data-[state=active]:bg-slate-800 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400 data-[state=active]:shadow-none text-slate-500 px-3 py-2 md:px-4 md:py-2 rounded-lg transition-all hover:bg-slate-100 dark:hover:bg-slate-800/50 bg-transparent text-sm font-medium">
-                                    Historial
                                 </TabsTrigger>
                             </TabsList>
                         </header>
@@ -1039,7 +1046,9 @@ export default function SalesPage() {
                                                     <div className="space-y-3">
                                                         <Label className="text-slate-400 dark:text-slate-500 dark:text-slate-400 font-bold">Tipo de Documento</Label>
                                                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                                                            {comprobantes.map((comp) => (
+                                                            {comprobantes
+                                                                .filter(comp => !comp.nombre.toLowerCase().includes("cotización") && !comp.nombre.toLowerCase().includes("cotizacion"))
+                                                                .map((comp) => (
                                                                 <Button
                                                                     key={comp.id}
                                                                     variant={selectedCompType?.id === comp.id ? "default" : "outline"}
@@ -1116,7 +1125,7 @@ export default function SalesPage() {
                                                                 onClick={() => setPrintFormat("Ticket")}
                                                                 className={`border-slate-300 dark:border-slate-700 h-10 ${printFormat === 'Ticket' ? 'border-orange-500 text-orange-600 bg-orange-500/5 dark:text-orange-400' : 'text-slate-500 bg-transparent'}`}
                                                             >
-                                                                Ticket
+                                                                Recibo (Ticket)
                                                             </Button>
                                                             <Button
                                                                 variant="outline"
@@ -1225,7 +1234,7 @@ export default function SalesPage() {
                                                                         <Button variant="outline" size="sm" onClick={() => {
                                                                             setPrintFormat("Ticket")
                                                                             setTimeout(() => printCotizacion(c), 50)
-                                                                        }} className="px-2 h-7 text-[10px]">Ticket</Button>
+                                                                        }} className="px-2 h-7 text-[10px]">Recibo</Button>
                                                                         <Button variant="outline" size="sm" onClick={() => {
                                                                             setPrintFormat("A4")
                                                                             setTimeout(() => printCotizacion(c), 50)
@@ -1281,6 +1290,7 @@ export default function SalesPage() {
                                             <TableHeader className="sticky top-0 bg-slate-100 dark:bg-slate-800 z-10">
                                                 <TableRow className="border-slate-300 dark:border-slate-700">
                                                     <TableHead>Fecha</TableHead>
+                                                    <TableHead>Documento</TableHead>
                                                     <TableHead>Cliente</TableHead>
                                                     <TableHead>Tipo</TableHead>
                                                     <TableHead className="text-right">Total</TableHead>
@@ -1312,8 +1322,8 @@ export default function SalesPage() {
                                                             </TableCell>
                                                             <TableCell>{v.cliente?.nombre || 'Consumidor Final'}</TableCell>
                                                             <TableCell>
-                                                                <Badge variant="outline" className="bg-slate-100 dark:bg-slate-800 uppercase text-[10px]">
-                                                                    {v.tipo_comprobante || 'Ticket'}
+                                                                <Badge variant="outline" className="bg-slate-100 dark:bg-slate-800 uppercase text-[10px] border-purple-500 text-purple-600">
+                                                                    {v.tipo_comprobante === 'ticket' ? 'Recibo' : (v.tipo_comprobante || 'Recibo')}
                                                                 </Badge>
                                                             </TableCell>
                                                             <TableCell className="text-right font-medium text-blue-500">S/ {v.total}</TableCell>
@@ -1377,13 +1387,13 @@ export default function SalesPage() {
                                                     <div>
                                                         <span className="text-slate-500 block mb-1">Cajero</span>
                                                         <span className="font-medium text-slate-900 dark:text-white">
-                                                            {selectedSaleDetail?.usuario?.nombre || 'Admin'}
+                                                            {selectedSaleDetail?.usuario?.nombre || 'Administrador del Sistema'}
                                                         </span>
                                                     </div>
                                                     <div>
                                                         <span className="text-slate-500 block mb-1">Tipo de Comprobante</span>
                                                         <Badge variant="outline" className="capitalize border-purple-500 text-purple-600">
-                                                            {selectedSaleDetail?.tipo_comprobante || 'Recibo'}
+                                                            {selectedSaleDetail?.tipo_comprobante === 'ticket' ? 'Recibo' : (selectedSaleDetail?.tipo_comprobante || 'Recibo')}
                                                         </Badge>
                                                     </div>
                                                 </div>

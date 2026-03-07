@@ -10,7 +10,7 @@ const saleSchema = z.object({
   subtotal: z.number(),
   igv: z.number(),
   total: z.number(),
-  metodo_pago: z.enum(["efectivo", "transferencia", "mixto"]),
+  metodo_pago: z.preprocess((val) => typeof val === "string" ? val.toLowerCase() : val, z.enum(["efectivo", "transferencia", "mixto"])),
   tipo_comprobante: z.string(),
   monto_efectivo: z.number().optional().default(0),
   monto_transferencia: z.number().optional().default(0),
@@ -117,7 +117,9 @@ export async function POST(request: Request) {
           total: total,
           estado: "pagado",
           metodo_pago: metodo_pago.toLowerCase() as any,
-          tipo_comprobante: tipo_comprobante.toLowerCase() as any,
+          tipo_comprobante: ["ticket", "boleta", "factura"].includes(tipo_comprobante.toLowerCase()) 
+            ? tipo_comprobante.toLowerCase() as any 
+            : "ticket",
           monto_efectivo: monto_efectivo,
           monto_transferencia: monto_transferencia,
           serie: serieFinal,
@@ -179,6 +181,9 @@ export async function POST(request: Request) {
     return NextResponse.json(result, { status: 201 })
   } catch (error) {
     console.error("Error creating sale:", error)
-    return NextResponse.json({ message: "Error al registrar la venta" }, { status: 500 })
+    return NextResponse.json({ 
+      message: "Error al registrar la venta",
+      error: error instanceof Error ? error.message : String(error)
+    }, { status: 500 })
   }
 }
