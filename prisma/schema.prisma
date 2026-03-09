@@ -1,0 +1,398 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model usuario {
+  id_usuario     Int          @id @default(autoincrement())
+  nombre         String       @db.VarChar(100)
+  usuario        String       @unique(map: "usuario") @db.VarChar(50)
+  password       String       @db.VarChar(255)
+  rol            Rol
+  estado         Int?         @default(1) @db.TinyInt
+  fecha_creacion DateTime?    @default(now()) @db.Timestamp(0)
+  cajas          caja[]
+  compras        compra[]
+  cotizaciones   cotizacion[]
+  ventas         venta[]
+
+  @@map("usuarios")
+}
+
+model categoria {
+  id_categoria Int        @id @default(autoincrement())
+  nombre       String     @db.VarChar(100)
+  descripcion  String?    @db.Text
+  estado       Int?       @default(1) @db.TinyInt
+  productos    producto[]
+
+  @@map("categorias")
+}
+
+model unidad_medida {
+  id_unidad   Int               @id @default(autoincrement())
+  nombre      String            @db.VarChar(50)
+  abreviatura String            @db.VarChar(10)
+  productos   producto[]
+  precios     producto_precio[]
+
+  @@map("unidades_medida")
+}
+
+model producto {
+  id_producto          Int                     @id @default(autoincrement())
+  codigo               String?                 @unique(map: "codigo") @db.VarChar(50)
+  nombre               String                  @db.VarChar(150)
+  descripcion          String?                 @db.Text
+  id_categoria         Int?
+  id_unidad            Int?
+  precio_compra        Decimal?                @default(0.00) @db.Decimal(10, 2)
+  precio_venta         Decimal                 @db.Decimal(10, 2)
+  stock_actual         Decimal?                @default(0.00) @db.Decimal(12, 2)
+  stock_minimo         Decimal?                @default(0.00) @db.Decimal(12, 2)
+  estado               Int?                    @default(1) @db.TinyInt
+  fecha_registro       DateTime?               @default(now()) @db.Timestamp(0)
+  detalle_compras      detalle_compra[]
+  detalle_cotizaciones detalle_cotizacion[]
+  detalle_ventas       detalle_venta[]
+  movimientos          movimiento_inventario[]
+  categoria            categoria?              @relation(fields: [id_categoria], references: [id_categoria], onDelete: NoAction, onUpdate: NoAction, map: "productos_ibfk_1")
+  unidad_medida        unidad_medida?          @relation(fields: [id_unidad], references: [id_unidad], onDelete: NoAction, onUpdate: NoAction, map: "productos_ibfk_2")
+  trabajo_materiales   trabajo_material[]
+
+  precios producto_precio[]
+
+  @@index([id_categoria], map: "id_categoria")
+  @@index([id_unidad], map: "id_unidad")
+  @@map("productos")
+}
+
+model producto_precio {
+  id_precio     Int           @id @default(autoincrement())
+  id_producto   Int
+  id_unidad     Int
+  nombre        String        @db.VarChar(50)
+  factor        Decimal       @db.Decimal(12, 2)
+  precio        Decimal       @db.Decimal(10, 2)
+  producto      producto      @relation(fields: [id_producto], references: [id_producto], onDelete: Cascade)
+  unidad_medida unidad_medida @relation(fields: [id_unidad], references: [id_unidad], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id_producto])
+  @@index([id_unidad])
+  @@map("productos_precios")
+}
+
+model movimiento_inventario {
+  id_movimiento   Int            @id @default(autoincrement())
+  id_producto     Int
+  tipo            TipoMovimiento
+  cantidad        Decimal        @db.Decimal(12, 2)
+  precio_unitario Decimal?       @db.Decimal(10, 2)
+  referencia      String?        @db.VarChar(100)
+  fecha           DateTime?      @default(now()) @db.Timestamp(0)
+  producto        producto       @relation(fields: [id_producto], references: [id_producto], onDelete: NoAction, onUpdate: NoAction, map: "movimientos_inventario_ibfk_1")
+
+  @@index([id_producto], map: "id_producto")
+  @@map("movimientos_inventario")
+}
+
+model proveedor {
+  id_proveedor Int      @id @default(autoincrement())
+  ruc          String?  @db.VarChar(20)
+  nombre       String   @db.VarChar(150)
+  telefono     String?  @db.VarChar(20)
+  direccion    String?  @db.VarChar(200)
+  email        String?  @db.VarChar(100)
+  estado       Int?     @default(1) @db.TinyInt
+  compras      compra[]
+
+  @@map("proveedores")
+}
+
+model compra {
+  id_compra    Int              @id @default(autoincrement())
+  id_proveedor Int
+  id_usuario   Int?
+  fecha        DateTime?        @default(now()) @db.DateTime(0)
+  subtotal     Decimal?         @db.Decimal(12, 2)
+  igv          Decimal?         @db.Decimal(12, 2)
+  total        Decimal?         @db.Decimal(12, 2)
+  proveedor    proveedor        @relation(fields: [id_proveedor], references: [id_proveedor], onDelete: NoAction, onUpdate: NoAction, map: "compras_ibfk_1")
+  usuario      usuario?         @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction, map: "compras_ibfk_2")
+  detalles     detalle_compra[]
+
+  @@index([id_proveedor], map: "id_proveedor")
+  @@index([id_usuario], map: "id_usuario")
+  @@map("compras")
+}
+
+model detalle_compra {
+  id_detalle    Int      @id @default(autoincrement())
+  id_compra     Int
+  id_producto   Int
+  cantidad      Decimal  @db.Decimal(12, 2)
+  precio_compra Decimal  @db.Decimal(10, 2)
+  subtotal      Decimal? @db.Decimal(12, 2)
+  compra        compra   @relation(fields: [id_compra], references: [id_compra], onDelete: Cascade, onUpdate: NoAction, map: "detalle_compras_ibfk_1")
+  producto      producto @relation(fields: [id_producto], references: [id_producto], onDelete: NoAction, onUpdate: NoAction, map: "detalle_compras_ibfk_2")
+
+  @@index([id_compra], map: "id_compra")
+  @@index([id_producto], map: "id_producto")
+  @@map("detalle_compras")
+}
+
+model cliente {
+  id_cliente   Int          @id @default(autoincrement())
+  nombre       String       @db.VarChar(150)
+  dni_ruc      String?      @db.VarChar(20)
+  telefono     String?      @db.VarChar(20)
+  direccion    String?      @db.VarChar(200)
+  estado       Int?         @default(1) @db.TinyInt
+  cotizaciones cotizacion[]
+  trabajos     trabajo[]
+  ventas       venta[]
+
+  @@map("clientes")
+}
+
+model venta {
+  id_venta                     Int                        @id @default(autoincrement())
+  id_cliente                   Int?
+  id_usuario                   Int?
+  tipo                         TipoVenta?                 @default(producto)
+  fecha                        DateTime?                  @default(now()) @db.DateTime(0)
+  subtotal                     Decimal?                   @db.Decimal(12, 2)
+  igv                          Decimal?                   @db.Decimal(12, 2)
+  total                        Decimal?                   @db.Decimal(12, 2)
+  estado                       EstadoVenta?               @default(pagado)
+  tipo_comprobante             TipoComprobante?           @default(ticket)
+  metodo_pago                  MetodoPago?                @default(efectivo)
+  monto_efectivo               Decimal?                   @db.Decimal(12, 2)
+  monto_transferencia          Decimal?                   @db.Decimal(12, 2)
+  serie                        String?                    @db.VarChar(10)
+  correlativo                  Int?
+  porcentaje_igv               Decimal?                   @db.Decimal(5, 2)
+  id_configuracion_comprobante Int?
+  detalles                     detalle_venta[]
+  cliente                      cliente?                   @relation(fields: [id_cliente], references: [id_cliente], onDelete: NoAction, onUpdate: NoAction, map: "ventas_ibfk_1")
+  usuario                      usuario?                   @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction, map: "ventas_ibfk_2")
+  configuracion_comprobante    configuracion_comprobante? @relation(fields: [id_configuracion_comprobante], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ventas_ibfk_3")
+
+  @@index([id_cliente], map: "id_cliente")
+  @@index([id_usuario], map: "id_usuario")
+  @@index([id_configuracion_comprobante], map: "id_configuracion_comprobante")
+  @@map("ventas")
+}
+
+model detalle_venta {
+  id_detalle      Int       @id @default(autoincrement())
+  id_venta        Int
+  id_producto     Int?
+  descripcion     String?   @db.VarChar(200)
+  cantidad        Decimal?  @db.Decimal(12, 2)
+  precio_unitario Decimal?  @db.Decimal(10, 2)
+  subtotal        Decimal?  @db.Decimal(12, 2)
+  unidad          String?   @db.VarChar(50)
+  factor          Decimal?  @default(1.00) @db.Decimal(12, 2)
+  venta           venta     @relation(fields: [id_venta], references: [id_venta], onDelete: Cascade, onUpdate: NoAction, map: "detalle_ventas_ibfk_1")
+  producto        producto? @relation(fields: [id_producto], references: [id_producto], onDelete: NoAction, onUpdate: NoAction, map: "detalle_ventas_ibfk_2")
+
+  @@index([id_producto], map: "id_producto")
+  @@index([id_venta], map: "id_venta")
+  @@map("detalle_ventas")
+}
+
+model caja {
+  id_caja        Int      @id @default(autoincrement())
+  fecha          DateTime @db.Date
+  monto_inicial  Decimal? @db.Decimal(12, 2)
+  total_ingresos Decimal? @db.Decimal(12, 2)
+  total_egresos  Decimal? @db.Decimal(12, 2)
+  monto_final    Decimal? @db.Decimal(12, 2)
+  id_usuario     Int?
+  usuario        usuario? @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction, map: "caja_ibfk_1")
+
+  @@index([id_usuario], map: "id_usuario")
+  @@map("caja")
+}
+
+model trabajo {
+  id_trabajo       Int                @id @default(autoincrement())
+  id_cliente       Int?
+  descripcion      String?            @db.Text
+  fecha_inicio     DateTime?          @db.Date
+  fecha_fin        DateTime?          @db.Date
+  costo_materiales Decimal?           @db.Decimal(12, 2)
+  costo_mano_obra  Decimal?           @db.Decimal(12, 2)
+  precio_total     Decimal?           @db.Decimal(12, 2)
+  estado           EstadoTrabajo?
+  materiales       trabajo_material[]
+  tecnicos         trabajo_tecnico[]
+  cliente          cliente?           @relation(fields: [id_cliente], references: [id_cliente], onDelete: NoAction, onUpdate: NoAction, map: "trabajos_ibfk_1")
+
+  @@index([id_cliente], map: "id_cliente")
+  @@map("trabajos")
+}
+
+model trabajo_material {
+  id          Int       @id @default(autoincrement())
+  id_trabajo  Int?
+  id_producto Int?
+  cantidad    Decimal?  @db.Decimal(12, 2)
+  trabajo     trabajo?  @relation(fields: [id_trabajo], references: [id_trabajo], onDelete: Cascade, onUpdate: NoAction, map: "trabajo_materiales_ibfk_1")
+  producto    producto? @relation(fields: [id_producto], references: [id_producto], onDelete: NoAction, onUpdate: NoAction, map: "trabajo_materiales_ibfk_2")
+
+  @@index([id_producto], map: "id_producto")
+  @@index([id_trabajo], map: "id_trabajo")
+  @@map("trabajo_materiales")
+}
+
+model tecnico {
+  id_tecnico   Int               @id @default(autoincrement())
+  nombre       String?           @db.VarChar(150)
+  telefono     String?           @db.VarChar(20)
+  especialidad String?           @db.VarChar(100)
+  estado       Int?              @default(1) @db.TinyInt
+  trabajos     trabajo_tecnico[]
+
+  @@map("tecnicos")
+}
+
+model trabajo_tecnico {
+  id         Int      @id @default(autoincrement())
+  id_trabajo Int?
+  id_tecnico Int?
+  pago       Decimal? @db.Decimal(12, 2)
+  trabajo    trabajo? @relation(fields: [id_trabajo], references: [id_trabajo], onDelete: Cascade, onUpdate: NoAction, map: "trabajo_tecnicos_ibfk_1")
+  tecnico    tecnico? @relation(fields: [id_tecnico], references: [id_tecnico], onDelete: NoAction, onUpdate: NoAction, map: "trabajo_tecnicos_ibfk_2")
+
+  @@index([id_tecnico], map: "id_tecnico")
+  @@index([id_trabajo], map: "id_trabajo")
+  @@map("trabajo_tecnicos")
+}
+
+model cotizacion {
+  id_cotizacion                Int                        @id @default(autoincrement())
+  id_cliente                   Int?
+  id_usuario                   Int?
+  fecha                        DateTime?                  @default(now()) @db.DateTime(0)
+  subtotal                     Decimal?                   @db.Decimal(12, 2)
+  igv                          Decimal?                   @db.Decimal(12, 2)
+  total                        Decimal?                   @db.Decimal(12, 2)
+  estado                       EstadoCotizacion?          @default(pendiente)
+  serie                        String?                    @db.VarChar(10)
+  correlativo                  Int?
+  porcentaje_igv               Decimal?                   @db.Decimal(5, 2)
+  id_configuracion_comprobante Int?
+  cliente                      cliente?                   @relation(fields: [id_cliente], references: [id_cliente], onDelete: NoAction, onUpdate: NoAction)
+  usuario                      usuario?                   @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
+  configuracion_comprobante    configuracion_comprobante? @relation(fields: [id_configuracion_comprobante], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "cotizaciones_ibfk_3")
+  detalles                     detalle_cotizacion[]
+
+  @@index([id_cliente])
+  @@index([id_usuario])
+  @@index([id_configuracion_comprobante], map: "id_configuracion_comprobante")
+  @@map("cotizaciones")
+}
+
+model detalle_cotizacion {
+  id_detalle      Int        @id @default(autoincrement())
+  id_cotizacion   Int
+  id_producto     Int?
+  descripcion     String?    @db.VarChar(200)
+  cantidad        Decimal?   @db.Decimal(12, 2)
+  precio_unitario Decimal?   @db.Decimal(10, 2)
+  subtotal        Decimal?   @db.Decimal(12, 2)
+  unidad          String?    @db.VarChar(50)
+  factor          Decimal?   @default(1.00) @db.Decimal(12, 2)
+  cotizacion      cotizacion @relation(fields: [id_cotizacion], references: [id_cotizacion], onDelete: Cascade, onUpdate: NoAction)
+  producto        producto?  @relation(fields: [id_producto], references: [id_producto], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id_producto])
+  @@index([id_cotizacion])
+  @@map("detalle_cotizaciones")
+}
+
+model empresa {
+  id_empresa          Int       @id @default(autoincrement())
+  nombre              String    @db.VarChar(150)
+  nombre_sistema      String?   @db.VarChar(150)
+  ruc                 String?   @db.VarChar(20)
+  direccion           String?   @db.VarChar(200)
+  telefono            String?   @db.VarChar(20)
+  email               String?   @db.VarChar(100)
+  logo_url            String?   @db.VarChar(255)
+  moneda              String?   @default("PEN") @db.VarChar(10)
+  igv_porcentaje      Decimal?  @default(18.00) @db.Decimal(5, 2)
+  mensaje_ticket      String?   @db.Text
+  fecha_actualizacion DateTime? @default(now()) @updatedAt @db.Timestamp(0)
+
+  @@map("empresa")
+}
+
+model configuracion_comprobante {
+  id             Int          @id @default(autoincrement())
+  nombre         String       @db.VarChar(50)
+  aplica_igv     Boolean      @default(true)
+  porcentaje_igv Decimal      @default(18.00) @db.Decimal(5, 2)
+  serie          String?      @db.VarChar(10)
+  correlativo    Int          @default(1)
+  activo         Boolean      @default(true)
+  ventas         venta[]
+  cotizacion     cotizacion[]
+
+  @@map("configuracion_comprobante")
+}
+
+enum Rol {
+  admin
+  vendedor
+  almacen
+  tecnico
+}
+
+enum TipoMovimiento {
+  compra
+  venta
+  ajuste
+  uso_trabajo
+}
+
+enum TipoVenta {
+  producto
+  trabajo
+}
+
+enum EstadoVenta {
+  pagado
+  anulado
+}
+
+enum EstadoTrabajo {
+  pendiente
+  proceso
+  terminado
+}
+
+enum MetodoPago {
+  efectivo
+  transferencia
+  mixto
+}
+
+enum TipoComprobante {
+  ticket
+  boleta
+  factura
+}
+
+enum EstadoCotizacion {
+  pendiente
+  procesada
+  anulada
+}

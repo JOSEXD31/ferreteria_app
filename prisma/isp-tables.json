@@ -1,0 +1,23 @@
+[
+  "_prisma_migrations",
+  "caja",
+  "cliente",
+  "comprobante_pago",
+  "contrato",
+  "det_oficina_personal",
+  "det_sede_tecnico",
+  "detalle_pago",
+  "deuda",
+  "especialidad",
+  "historial_cambios",
+  "nodo",
+  "oficina",
+  "orden_trabajo",
+  "personal_oficina",
+  "sede",
+  "servicio",
+  "tecnico",
+  "tipo_comprobante",
+  "tipo_trabajo",
+  "usuario"
+]
